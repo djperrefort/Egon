@@ -66,7 +66,7 @@ class Node(abc.ABC):
             A list of ``Output`` connection objects
         """
 
-        return self._get_attrs(connectors.Input)
+        return self._get_attrs(connectors.Output)
 
     def input_nodes(self) -> List[Union[Source, Inline]]:
         """Returns a list of upstream pipeline nodes is_connected to the current _node"""
@@ -141,9 +141,12 @@ class Target(Node, ABC):
             raise ValueError('Source objects cannot have upstream components')
 
     def expecting_inputs(self) -> bool:
-        """Return True if the node has upstream processes that are still running"""
+        """Return True if the node is still expecting data from upstream"""
 
-        return all(n.finished for n in self.input_nodes()) and all(c.empty() for c in self.input_connections())
+        return not (
+                all(n.finished for n in self.input_nodes()) and
+                all(c.empty() for c in self.input_connections())
+        )
 
 
 class Inline(Target, Source, ABC):
