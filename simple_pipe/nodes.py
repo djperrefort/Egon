@@ -109,6 +109,9 @@ class Source(Node, ABC):
         if self.input_connections():
             raise ValueError('Source objects cannot have upstream components')
 
+        if not self.output_connections():
+            raise ValueError('Source node has no output connectors')
+
 
 class Target(Node, ABC):
     """A pipeline process that only has input streams"""
@@ -119,6 +122,9 @@ class Target(Node, ABC):
         Raises:
             ValueError: For an invalid instance construction
         """
+
+        if not self.input_connections():
+            raise ValueError('Target node has no input connectors')
 
         if self.output_connections():
             raise ValueError('Source objects cannot have upstream components')
@@ -134,4 +140,5 @@ class Inline(Source, Target, ABC):
             ValueError: For an invalid instance construction
         """
 
-        pass
+        if not (self.input_connections() or self.output_connections()):
+            raise ValueError('Inline node has no associated connectorsZ')
