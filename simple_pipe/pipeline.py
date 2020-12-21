@@ -7,53 +7,10 @@ from typing import List
 from . import nodes
 
 
-class KillSignal:
-    _instance = None
-
-    def __new__(cls, *args, **kwargs) -> KillSignal:
-        if not cls._instance:
-            cls._instance = super(KillSignal, cls).__new__(cls, *args, **kwargs)
-
-        return cls._instance
-
-
-class AbstractPipeline:
-    """Base class for pipeline construction"""
-
-    def nodes(self) -> List[nodes.Node]:
-        """Returns a list of all nodes in the pipeline
-
-        Returns:
-            A list of ``Node`` instances
-        """
-
-        predicate = lambda a: isinstance(a, nodes.Node)
-        return [getattr(self, a[0]) for a in inspect.getmembers(self, predicate)]
-
-    def validate(self) -> None:
-        """Check that the pipeline has no unconnected streams"""
-
-        raise NotImplemented
-
-    def visualize(self) -> None:
-        """Create a graphic visualization of the pipeline"""
-
-        raise NotImplemented
-
-
-class Pipeline(AbstractPipeline):
+class ProcessManager:
     """Handles the starting and termination of forked processes"""
 
-    def __init__(self) -> None:
-        self.processes = []
-        self._allocate_processes()
-
-    def _allocate_processes(self) -> None:
-        """Instantiate forked processes for each pipeline _node"""
-
-        for node in self.nodes():
-            for i in range(node.num_processes):
-                self.processes.append(mp.Process(target=node.execute))
+    processes: List
 
     @property
     def process_count(self) -> int:
@@ -84,3 +41,31 @@ class Pipeline(AbstractPipeline):
 
         for p in self.processes:
             p.start()
+
+
+class Pipeline(ProcessManager):
+    """Manages a collection of nodes as a single analysis pipeline"""
+
+    def setup_pipeline(self) -> None:
+        """Set up the pipeline and instantiate child processes"""
+
+        self.validate()
+        self.processes = []
+        for node in self.nodes():
+            for i in range(node.num_processes):
+                self.processes.append(mp.Process(target=node.execute))
+
+    def nodes(self) -> List[nodes.Node]:
+        """Returns a list of all nodes in the pipeline
+
+        Returns:
+            A list of ``Node`` instances
+        """
+
+        return [getattr(self, a[0]) for a in inspect.getmembers(self, lambda a: isinstance(a, nodes.Node))]
+
+    def validate(self) -> None:
+        """Check that the pipeline has no nodes with unassigned connectors"""
+
+        if not all(n.is_connected() for n in self.nodes()):
+            raise RuntimeError('Pipeline cannot run with disconnected inputs/outputs')
