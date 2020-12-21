@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import inspect
 import multiprocessing as mp
 from typing import List
@@ -5,17 +7,27 @@ from typing import List
 from . import nodes
 
 
+class KillSignal:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs) -> KillSignal:
+        if not cls._instance:
+            cls._instance = super(KillSignal, cls).__new__(cls, *args, **kwargs)
+
+        return cls._instance
+
+
 class AbstractPipeline:
     """Base class for pipeline construction"""
 
-    def nodes(self) -> List[nodes.NodeBase]:
+    def nodes(self) -> List[nodes.Node]:
         """Returns a list of all nodes in the pipeline
 
         Returns:
-            A list of ``NodeBase`` instances
+            A list of ``Node`` instances
         """
 
-        predicate = lambda a: isinstance(a, nodes.NodeBase)
+        predicate = lambda a: isinstance(a, nodes.Node)
         return [getattr(self, a[0]) for a in inspect.getmembers(self, predicate)]
 
     def validate(self) -> None:
@@ -37,11 +49,11 @@ class Pipeline(AbstractPipeline):
         self._allocate_processes()
 
     def _allocate_processes(self) -> None:
-        """Instantiate forked processes for each pipeline node"""
+        """Instantiate forked processes for each pipeline _node"""
 
         for node in self.nodes():
             for i in range(node.num_processes):
-                self.processes.append(mp.Process(target=node.__call__))
+                self.processes.append(mp.Process(target=node.run))
 
     @property
     def process_count(self) -> int:
