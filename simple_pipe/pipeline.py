@@ -53,7 +53,7 @@ class Pipeline(AbstractPipeline):
 
         for node in self.nodes():
             for i in range(node.num_processes):
-                self.processes.append(mp.Process(target=node.run))
+                self.processes.append(mp.Process(target=node.execute))
 
     @property
     def process_count(self) -> int:
