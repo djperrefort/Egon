@@ -4,10 +4,10 @@ import multiprocessing as mp
 from functools import wraps
 from typing import Any, Optional
 
-from .nodes import NodeBase
+from .nodes import Node
 
 
-class ConnectorBase:
+class Connector:
     """Base class for all connection objects"""
 
     def __init__(self, maxsize: int = 0) -> None:
@@ -18,15 +18,15 @@ class ConnectorBase:
         """
 
         self._queue = mp.Queue(maxsize)  # Handles the passing of data between nodes
-        self.node: Optional[NodeBase] = None  # The node that this connector is assigned to
-        self._partner: Optional[ConnectorBase] = None  # The connector object of another node
+        self._node: Optional[Node] = None  # The _node that this connector is assigned to
+        self._partner: Optional[Connector] = None  # The connector object of another _node
 
     def connected(self) -> bool:
         """Return whether the connector has been connected to a task"""
 
         return not (self._partner is None)
 
-    def connect(self, connector) -> None:
+    def connect(self, connector: Connector) -> None:
         """Establish the flow of data between this connector and a partner
 
         Args:
@@ -54,10 +54,11 @@ class ConnectorBase:
             old_partner.disconnect()
 
 
-class Input(ConnectorBase):
+class Input(Connector):
     """Handles the input of data into a pipeline node"""
 
-    @wraps(ConnectorBase.connect)
+    # noinspection PyMissingOrEmptyDocstring
+    @wraps(Connector.connect)
     def connect(self, connector: Output) -> None:
         super(Input, self).connect(connector)
 
@@ -67,10 +68,11 @@ class Input(ConnectorBase):
         return self._queue.get()
 
 
-class Output(ConnectorBase):
+class Output(Connector):
     """Handles the output of data from a pipeline node"""
 
-    @wraps(ConnectorBase.connect)
+    # noinspection PyMissingOrEmptyDocstring
+    @wraps(Connector.connect)
     def connect(self, connector: Input) -> None:
         super(Output, self).connect(connector)
 
