@@ -85,11 +85,10 @@ class Connector(DataStore):
 class Input(Connector):
     """Handles the input of data into a pipeline node"""
 
-    def get(self) -> Any:
+    def get(self, block=False, timeout=None) -> Any:
         """Retrieve data from the connector"""
 
-        return self._queue.get()
-
+        return self._queue.get(block, timeout)
 
 class Output(Connector):
     """Handles the output of data from a pipeline node"""

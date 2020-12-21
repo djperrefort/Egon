@@ -1,65 +1,97 @@
-from copy import copy
-from typing import Union, Type
+import inspect
+from functools import wraps
+from typing import Any, Callable, Collection, Generator
 
-from simple_pipe import connectors, nodes
+from . import connectors, nodes
 
-
-def _create_wrapper(return_type: Type[nodes.NodeBase], **attr: connectors) -> callable:
-    """Wrap a callable as a pipeline node
-
-    Args:
-        return_type: The type of object to return
-        **attr: Any connector objects to assign to the wrapped function
-
-    Returns:
-        An instantiated pipeline node
-    """
-
-    def wrapper(func: callable) -> nodes.NodeBase:
-        wrapped_process = copy(return_type)
-        wrapped_process.action = func
-        for key, val in attr.items():
-            setattr(wrapped_process, key, val)
-
-        return wrapped_process()
-
-    return wrapper
+GeneratorFunction = Callable[[], Generator]
 
 
-def as_source(**connections: connectors.Output) -> callable:
+def create_single_argument_function(func: callable) -> callable:
+    """Restructure a function to accept its arguments a single tuple"""
+
+    # If the function already takes a single argument, there is nothing to do
+    if len(inspect.getfullargspec(func).args) == 1:
+        return func
+
+    @wraps(func)
+    def wrapped(args: Collection) -> Any:
+        """A wrapped version of ``func`` that only takes a single argument"""
+
+        return func(*args)
+
+    return wrapped
+
+
+def as_source(maxsize_output=0) -> Callable[[GeneratorFunction], nodes.Source]:
     """Wrap a callable as a pipeline ``Source`` object
-
-    Args:
-        **connections: Any connector objects to assign to the wrapped function
 
     Returns:
         A wrapper for casting a function as a callable ``Source`` object
     """
 
-    return _create_wrapper(nodes.Source, **connections)
+    def wrapper(func: GeneratorFunction) -> nodes.Source:
+        """Creates a class implementation of the given function"""
+
+        class WrappedSource(nodes.Source):
+            output = connectors.Output(maxsize_output)
+            __call__ = func
+
+            def action(self) -> None:
+                for x in func():
+                    self.output.put(x)
+
+        return WrappedSource()
+
+    return wrapper
 
 
-def as_target(**connections: connectors.Input) -> callable:
+def as_target(maxsize_input=0) -> Callable[[callable], nodes.Target]:
     """Wrap a callable as a pipeline ``Target`` object
-
-    Args:
-        **connections: Any connector objects to assign to the wrapped function
 
     Returns:
         A wrapper for casting a function as a callable ``Target`` object
     """
 
-    return _create_wrapper(nodes.Target, **connections)
+    def wrapper(func: callable) -> nodes.Target:
+        """Creates a class implementation of the given function"""
+
+        simplified_func = create_single_argument_function(func)
+
+        class WrappedTarget(nodes.Target):
+            input = connectors.Input(maxsize_input)
+            __call__ = func
+
+            def action(self) -> None:
+                while self.expecting_inputs():
+                    simplified_func(self.input.get())
+
+        return WrappedTarget()
+
+    return wrapper
 
 
-def as_inline(**connections: Union[connectors.Input, connectors.Output]) -> callable:
+def as_inline(maxsize_input=0, maxsize_output=0) -> Callable[[callable], nodes.Inline]:
     """Wrap a callable as a pipeline ``Inline`` object
-
-    Args:
-        **connections: Any connector objects to assign to the wrapped function
 
     Returns:
         A wrapper for casting a function as a callable ``Inline`` object
     """
 
-    return _create_wrapper(nodes.Inline, **connections)
+    def wrapper(func: callable) -> nodes.Inline:
+        """Creates a class implementation of the given function"""
+
+        simplified_func = create_single_argument_function(func)
+
+        class WrappedInline(nodes.Inline):
+            input = connectors.Input(maxsize_input)
+            output = connectors.Output(maxsize_output)
+            __call__ = func
+
+            def action(self) -> None:
+                while self.expecting_inputs():
+                    self.output.put(simplified_func(self.input.get()))
+
+        return WrappedInline()
+
+    return wrapper
