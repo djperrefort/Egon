@@ -38,7 +38,7 @@ class DataStore:
 class Connector(DataStore):
     """Base class for signal/slot like objects"""
 
-    def __init__(self, maxsize) -> None:
+    def __init__(self, maxsize=0) -> None:
         """Handles the communication of input/output data between pipeline nodes
 
         Args:
@@ -85,7 +85,7 @@ class Connector(DataStore):
 class Input(Connector):
     """Handles the input of data into a pipeline node"""
 
-    def get(self, block=False, timeout=None) -> Any:
+    def get(self, block=True, timeout=None) -> Any:
         """Retrieve data from the connector"""
 
         return self._queue.get(block, timeout)

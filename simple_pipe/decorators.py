@@ -64,7 +64,8 @@ def as_target(maxsize_input=0) -> Callable[[callable], nodes.Target]:
 
             def action(self) -> None:
                 while self.expecting_inputs():
-                    simplified_func(self.input.get())
+                    data = self.input.get()
+                    simplified_func(data)
 
         return WrappedTarget()
 
@@ -90,7 +91,9 @@ def as_inline(maxsize_input=0, maxsize_output=0) -> Callable[[callable], nodes.I
 
             def action(self) -> None:
                 while self.expecting_inputs():
-                    self.output.put(simplified_func(self.input.get()))
+                    in_data = self.input.get()
+                    out_data = simplified_func(in_data)
+                    self.output.put(out_data)
 
         return WrappedInline()
 

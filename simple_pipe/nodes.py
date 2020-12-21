@@ -92,8 +92,6 @@ class Node(abc.ABC):
     def teardown(self) -> None:
         """Teardown tasks called after running ``action``"""
 
-        pass
-
     def execute(self) -> None:
         """Execute the pipeline node
 
