@@ -1,71 +1,65 @@
 from copy import copy
-from typing import Type, Union
+from typing import Union, Type
 
-from . import connectors, units
-
-UpStreamUnit = Union[units.Source, units.Inline]
-DownStreamUnit = Union[units.Inline, units.Target]
-PipelineUnit = Union[units.Source, units.Inline, units.Target]
-PipelineUnitType = Union[Type[units.Source], Type[units.Inline], Type[units.Target]]
+from simple_pipe import connectors, nodes
 
 
-def _create_wrapped_object(func: callable, return_type: PipelineUnitType, **attr: connectors) -> PipelineUnit:
-    """Wrap a callable as a pipeline unit
+def _create_wrapper(return_type: Type[nodes.NodeBase], **attr: connectors) -> callable:
+    """Wrap a callable as a pipeline node
 
     Args:
-        func: The callable to wrap
         return_type: The type of object to return
-        **attr: Any connections to assign to the object
+        **attr: Any connector objects to assign to the wrapped function
 
     Returns:
-        An instantiated pipeline unit
+        An instantiated pipeline node
     """
 
-    wrapped_process = copy(return_type)
-    wrapped_process.action = func
-    for key, val in attr.items():
-        setattr(wrapped_process, key, val)
+    def wrapper(func: callable) -> nodes.NodeBase:
+        wrapped_process = copy(return_type)
+        wrapped_process.action = func
+        for key, val in attr.items():
+            setattr(wrapped_process, key, val)
 
-    return wrapped_process.__init__()
+        return wrapped_process()
+
+    return wrapper
 
 
-def as_source(func: callable, **targets: DownStreamUnit) -> units.Source:
+def as_source(**connections: connectors.Output) -> callable:
     """Wrap a callable as a pipeline ``Source`` object
 
     Args:
-        func: The callable to wrap
-        **targets: Any connections to assign to the object  # Todo: Fix this doc line
+        **connections: Any connector objects to assign to the wrapped function
 
     Returns:
-        A callable ``Source`` object
+        A wrapper for casting a function as a callable ``Source`` object
     """
 
-    return _create_wrapped_object(func, units.Source, **targets)
+    return _create_wrapper(nodes.Source, **connections)
 
 
-def as_target(func: callable, **sources: UpStreamUnit) -> units.Target:
+def as_target(**connections: connectors.Input) -> callable:
     """Wrap a callable as a pipeline ``Target`` object
 
     Args:
-        func: The callable to wrap
-        **sources: Any connections to assign to the object
+        **connections: Any connector objects to assign to the wrapped function
 
     Returns:
-        A callable ``Target`` object
+        A wrapper for casting a function as a callable ``Target`` object
     """
 
-    return _create_wrapped_object(func, units.Target, **sources)
+    return _create_wrapper(nodes.Target, **connections)
 
 
-def as_inline(func: callable, **connections: PipelineUnit) -> units.Inline:
+def as_inline(**connections: Union[connectors.Input, connectors.Output]) -> callable:
     """Wrap a callable as a pipeline ``Inline`` object
 
     Args:
-        func: The callable to wrap
-        **connections: Any connectors to assign to the object
+        **connections: Any connector objects to assign to the wrapped function
 
     Returns:
-        A callable ``Inline`` object
+        A wrapper for casting a function as a callable ``Inline`` object
     """
 
-    return _create_wrapped_object(func, units.Inline, **connections)
+    return _create_wrapper(nodes.Inline, **connections)
