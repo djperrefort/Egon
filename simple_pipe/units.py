@@ -65,3 +65,44 @@ class AbstractPipelineUnit:
         """Teardown tasks called after running ``action``"""
 
         pass
+
+
+class Source(AbstractPipelineUnit, metaclass=abc.ABCMeta):
+    """A pipeline process that only has output streams"""
+
+    def validate(self) -> None:
+        """Raise exception if the object is not a valid instance
+
+        Raises:
+            ValueError: For an invalid instance construction
+        """
+
+        if self.get_inputs():
+            raise ValueError('Source objects cannot have upstream components')
+
+
+class Target(AbstractPipelineUnit, metaclass=abc.ABCMeta):
+    """A pipeline process that only has input streams"""
+
+    def validate(self) -> None:
+        """Raise exception if the object is not a valid instance
+
+        Raises:
+            ValueError: For an invalid instance construction
+        """
+
+        if self.get_outputs():
+            raise ValueError('Source objects cannot have upstream components')
+
+
+class Inline(Source, Target, metaclass=abc.ABCMeta):
+    """A pipeline process that can have any number of input or output streams"""
+
+    def validate(self) -> None:
+        """Raise exception if the object is not a valid instance
+
+        Raises:
+            ValueError: For an invalid instance construction
+        """
+
+        pass
