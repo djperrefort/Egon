@@ -30,78 +30,75 @@ def _create_single_arg_function(func: callable) -> callable:
     return wrapped
 
 
-def as_source() -> Callable[[GeneratorFunction], nodes.Source]:
+def as_source(func: GeneratorFunction) -> nodes.Source:
     """Decorator for wrapping a callable as a pipeline ``Source`` object
 
     Returns:
         A wrapper for casting a function as a callable ``Source`` object
     """
 
-    def wrapper(func: GeneratorFunction) -> nodes.Source:
-        """Creates a class implementation of the given function"""
+    class WrappedSource(nodes.Source):
+        output = connectors.Output()
 
-        class WrappedSource(nodes.Source):
-            output = connectors.Output()
-            __call__ = func
+        @staticmethod
+        @wraps(func)
+        def __call__(*args, **kwargs) -> Any:
+            return func(*args, **kwargs)
 
-            def action(self) -> None:
-                for x in func():
-                    self.output.put(x)
+        def action(self) -> None:
+            for x in func():
+                self.output.put(x)
 
-        return WrappedSource()
-
-    return wrapper
+    return WrappedSource()
 
 
-def as_target() -> Callable[[callable], nodes.Target]:
+def as_target(func: callable) -> nodes.Target:
     """Decorator for wrapping a callable as a pipeline ``Target`` object
 
     Returns:
         A wrapper for casting a function as a callable ``Target`` object
     """
 
-    def wrapper(func: callable) -> nodes.Target:
-        """Creates a class implementation of the given function"""
+    simplified_func = _create_single_arg_function(func)
 
-        simplified_func = _create_single_arg_function(func)
+    class WrappedTarget(nodes.Target):
+        input = connectors.Input()
 
-        class WrappedTarget(nodes.Target):
-            input = connectors.Input()
-            __call__ = func
+        @staticmethod
+        @wraps(func)
+        def __call__(*args, **kwargs) -> Any:
+            return func(*args, **kwargs)
 
-            def action(self) -> None:
-                while self.expecting_inputs():
-                    data = self.input.get()
-                    simplified_func(data)
+        def action(self) -> None:
+            while self.expecting_inputs():
+                data = self.input.get()
+                simplified_func(data)
 
-        return WrappedTarget()
-
-    return wrapper
+    return WrappedTarget()
 
 
-def as_inline() -> Callable[[callable], nodes.Inline]:
+def as_inline(func: callable) -> nodes.Inline:
     """Decorator for wrapping a callable as a pipeline ``Inline`` object
 
     Returns:
         A wrapper for casting a function as a callable ``Inline`` object
     """
 
-    def wrapper(func: callable) -> nodes.Inline:
-        """Creates a class implementation of the given function"""
+    simplified_func = _create_single_arg_function(func)
 
-        simplified_func = _create_single_arg_function(func)
+    class WrappedInline(nodes.Inline):
+        input = connectors.Input()
+        output = connectors.Output()
 
-        class WrappedInline(nodes.Inline):
-            input = connectors.Input()
-            output = connectors.Output()
-            __call__ = func
+        @staticmethod
+        @wraps(func)
+        def __call__(*args, **kwargs) -> Any:
+            return func(*args, **kwargs)
 
-            def action(self) -> None:
-                while self.expecting_inputs():
-                    in_data = self.input.get()
-                    out_data = simplified_func(in_data)
-                    self.output.put(out_data)
+        def action(self) -> None:
+            while self.expecting_inputs():
+                in_data = self.input.get()
+                out_data = simplified_func(in_data)
+                self.output.put(out_data)
 
-        return WrappedInline()
-
-    return wrapper
+    return WrappedInline()
