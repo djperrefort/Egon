@@ -2,20 +2,8 @@ from functools import partial
 from unittest import TestCase
 
 from egon.connectors import Input, Output
-from egon.nodes import Node
-
-
-class TestingNode(Node):
-    """A testing node that implements placeholder functions for abstract methods"""
-
-    input = Input()
-    output = Output()
-
-    def _validate_init(self) -> None:
-        pass
-
-    def action(self) -> None:
-        pass
+from egon.nodes import Inline, Source, Target
+from . import mock
 
 
 class Execution(TestCase):
@@ -24,7 +12,7 @@ class Execution(TestCase):
     def setUp(self) -> None:
         """Create a testing node that tracks the execution method of it's methods"""
 
-        self.node = TestingNode()
+        self.node = mock.MockNode()
 
         # Track the call order of node functions
         self.call_list = []
@@ -47,3 +35,46 @@ class Execution(TestCase):
         self.assertTrue(self.node.finished)
 
 
+class TestConnectorLists(TestCase):
+    """Test ``Node`` instances are aware of their connectors"""
+
+    def setUp(self) -> None:
+        """Create a ``MockNode`` instance"""
+
+        self.node = mock.MockNode()
+
+    def test_all_inputs_are_listed(self) -> None:
+        """Test all input connectors are included in ``node.input_connections``"""
+
+        node_inputs = [self.node.input, self.node.second_input]
+        self.assertListEqual(self.node.input_connections(), node_inputs)
+
+    def test_all_outputs_are_listed(self) -> None:
+        """Test all output connectors are included in ``node.output_connections``"""
+
+        node_outputs = [self.node.output, self.node.second_output]
+        self.assertListEqual(self.node.output_connections(), node_outputs)
+
+
+class TreeNavigation(TestCase):
+    """Test ``Node`` instances are aware of their neighbors"""
+
+    def setUp(self) -> None:
+        """Create a tree of ``MockNode`` instances"""
+
+        self.root_node = mock.MockSource()
+        self.internal_node = mock.MockInline()
+        self.leaf_node = mock.MockTarget()
+
+        self.root_node.output.connect(self.internal_node.input)
+        self.internal_node.output.connect(self.leaf_node.input)
+
+    def test_parent_node(self) -> None:
+        """Test the inline node resolves the correct parent node"""
+
+        self.assertEqual(self.internal_node.input_nodes()[0], self.root_node)
+
+    def test_child_node(self) -> None:
+        """Test the inline node resolves the correct child node"""
+
+        self.assertEqual(self.internal_node.output_nodes()[0], self.root_node)
