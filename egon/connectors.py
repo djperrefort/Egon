@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import multiprocessing as mp
-from typing import Any, Optional, Union
+from typing import Any, Optional, TYPE_CHECKING, Union
 
 from . import exceptions
-from .nodes import Inline, Node, Source, Target
+
+if TYPE_CHECKING:
+    from .nodes import Inline, Node, Source, Target
 
 
 class DataStore:
