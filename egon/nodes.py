@@ -90,12 +90,12 @@ class Node(abc.ABC):
     def input_nodes(self) -> List[Union[Source, Inline]]:
         """Returns a list of upstream pipeline nodes _validate_connections to the current _node"""
 
-        return list(filter(None, (c.source for c in self.input_connections())))
+        return list(filter(None, (c.source_node for c in self.input_connections())))
 
     def output_nodes(self) -> List[Union[Inline, Target]]:
         """Returns a list of downstream pipeline nodes _validate_connections to the current _node"""
 
-        return list(filter(None, (c.destination for c in self.output_connections())))
+        return list(filter(None, (c.destination_node for c in self.output_connections())))
 
     def setup(self) -> None:
         """Setup tasks called before running ``action``"""
