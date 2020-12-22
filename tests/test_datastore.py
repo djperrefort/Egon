@@ -16,9 +16,9 @@ class QueueProperties(TestCase):
     def test_full_method_matches_queue_state(self) -> None:
 
         data_store = DataStore(maxsize=1)
-        self.assertEqual(data_store.full(), False)
-        self.data_store._queue.put(1)
-        self.assertEqual(data_store.full(), True)
+        self.assertFalse(data_store.full())
+        data_store._queue.put(1)
+        self.assertTrue(data_store.full())
 
     def test_size_method_matches_queue_state(self) -> None:
 
