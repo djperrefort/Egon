@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-import re
-from pathlib import Path
-import egon
-
 from setuptools import find_packages, setup
 
-# Get list of requirements
-with open('requirements.txt') as f:
-    requirements = f.read().splitlines()
+import egon
 
 # Get package version
 setup(name='egon',
@@ -28,5 +22,4 @@ setup(name='egon',
       author_email='djperrefort@pitt.edu',
       license='GPL v3',
       python_requires='>=3.6',
-      install_requires=requirements
       )
