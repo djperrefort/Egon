@@ -9,15 +9,10 @@ from .nodes import Inline, Node, Source, Target
 class DataStore:
     """Stores data in memory as it transfers between pipeline nodes"""
 
-    def __init__(self, maxsize: int = 0) -> None:
-        """Queue-like object for passing data between nodes and / or parallel processes
+    def __init__(self) -> None:
+        """Queue-like object for passing data between nodes and / or parallel processes"""
 
-        Args:
-            maxsize: The maximum number of items that can be stored in the queue
-        """
-
-        self._maxsize = maxsize
-        self._queue = mp.Queue(maxsize)
+        self._queue = mp.Queue()
 
     def empty(self) -> bool:
         """Return if the connection queue is empty"""
@@ -38,14 +33,10 @@ class DataStore:
 class Connector(DataStore):
     """Base class for signal/slot like objects"""
 
-    def __init__(self, maxsize=0) -> None:
-        """Handles the communication of input/output data between pipeline nodes
+    def __init__(self) -> None:
+        """Handles the communication of input/output data between pipeline nodes"""
 
-        Args:
-            maxsize: The maximum number of communicated objects that can be stored in memory at once
-        """
-
-        super().__init__(maxsize)
+        super().__init__()
         self._node: Optional[Node] = None  # The _node that this connector is assigned to
         self._partner_connection: Optional[Connector] = None  # The connector object of another node
 
@@ -77,7 +68,7 @@ class Connector(DataStore):
 
         old_partner = self._partner_connection
         self._partner_connection = None
-        self._queue = mp.Queue(maxsize=self._maxsize)
+        self._queue = mp.Queue()
 
         if old_partner:
             old_partner.disconnect()

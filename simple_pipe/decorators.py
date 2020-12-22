@@ -30,11 +30,8 @@ def _create_single_arg_function(func: callable) -> callable:
     return wrapped
 
 
-def as_source(maxsize_output=0) -> Callable[[GeneratorFunction], nodes.Source]:
+def as_source() -> Callable[[GeneratorFunction], nodes.Source]:
     """Decorator for wrapping a callable as a pipeline ``Source`` object
-
-    Args:
-        maxsize_output: The maximum number of returned objects that can be stored in memory at once
 
     Returns:
         A wrapper for casting a function as a callable ``Source`` object
@@ -44,7 +41,7 @@ def as_source(maxsize_output=0) -> Callable[[GeneratorFunction], nodes.Source]:
         """Creates a class implementation of the given function"""
 
         class WrappedSource(nodes.Source):
-            output = connectors.Output(maxsize_output)
+            output = connectors.Output()
             __call__ = func
 
             def action(self) -> None:
@@ -56,8 +53,8 @@ def as_source(maxsize_output=0) -> Callable[[GeneratorFunction], nodes.Source]:
     return wrapper
 
 
-def as_target(maxsize_input=0) -> Callable[[callable], nodes.Target]:
-    """Wrap a callable as a pipeline ``Target`` object
+def as_target() -> Callable[[callable], nodes.Target]:
+    """Decorator for wrapping a callable as a pipeline ``Target`` object
 
     Returns:
         A wrapper for casting a function as a callable ``Target`` object
@@ -69,7 +66,7 @@ def as_target(maxsize_input=0) -> Callable[[callable], nodes.Target]:
         simplified_func = _create_single_arg_function(func)
 
         class WrappedTarget(nodes.Target):
-            input = connectors.Input(maxsize_input)
+            input = connectors.Input()
             __call__ = func
 
             def action(self) -> None:
@@ -82,8 +79,8 @@ def as_target(maxsize_input=0) -> Callable[[callable], nodes.Target]:
     return wrapper
 
 
-def as_inline(maxsize_input=0, maxsize_output=0) -> Callable[[callable], nodes.Inline]:
-    """Wrap a callable as a pipeline ``Inline`` object
+def as_inline() -> Callable[[callable], nodes.Inline]:
+    """Decorator for wrapping a callable as a pipeline ``Inline`` object
 
     Returns:
         A wrapper for casting a function as a callable ``Inline`` object
@@ -95,8 +92,8 @@ def as_inline(maxsize_input=0, maxsize_output=0) -> Callable[[callable], nodes.I
         simplified_func = _create_single_arg_function(func)
 
         class WrappedInline(nodes.Inline):
-            input = connectors.Input(maxsize_input)
-            output = connectors.Output(maxsize_output)
+            input = connectors.Input()
+            output = connectors.Output()
             __call__ = func
 
             def action(self) -> None:
