@@ -19,7 +19,7 @@ class StartStopCommands(TestCase):
 
         self.process = Process(target=sleep_function)
         self.manager = ProcessManager()
-        self.manager.processes.append(self.process)
+        self.manager.processes = [self.process]
 
     def runTest(self) -> None:
         """Launch and then kill the process manager"""
@@ -33,3 +33,11 @@ class StartStopCommands(TestCase):
         self.manager.kill()
         sleep(1)  # Give the process time to exit
         self.assertFalse(self.process.is_alive())
+
+
+class NumProcesses(StartStopCommands):
+
+    def runTest(self) -> None:
+        """Test the counting of child processes"""
+
+        self.assertEqual(self.manager.process_count, 1)

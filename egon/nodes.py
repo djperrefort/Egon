@@ -44,8 +44,6 @@ class Node(abc.ABC):
             ValueError: For an invalid instance construction
         """
 
-        pass
-
     def _validate_connections(self) -> None:
         """Raise exception if any of the node's Inputs/Outputs are missing connections
 

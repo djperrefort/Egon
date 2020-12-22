@@ -5,7 +5,7 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 from . import exceptions
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from .nodes import Inline, Node, Source, Target
 
 

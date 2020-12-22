@@ -47,4 +47,3 @@ class Execution(TestCase):
         self.assertTrue(self.node.finished)
 
 
-

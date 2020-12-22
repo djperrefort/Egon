@@ -10,7 +10,7 @@ from . import nodes
 class ProcessManager:
     """Handles the starting and termination of forked processes"""
 
-    processes: List = []
+    processes: List
 
     @property
     def process_count(self) -> int:
