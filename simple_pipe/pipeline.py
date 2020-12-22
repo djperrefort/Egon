@@ -69,5 +69,5 @@ class Pipeline(ProcessManager):
     def _validate_nodes(self) -> None:
         """Check that the pipeline has no nodes with unassigned connectors"""
 
-        if not all(n._validate_connections() for n in self.nodes()):
-            raise RuntimeError('Pipeline cannot run with disconnected inputs/outputs')
+        for n in self.nodes():
+            n._validate_connections()

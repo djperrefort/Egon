@@ -35,7 +35,6 @@ class Node(abc.ABC):
         """Cast boolean to integer and store as a ctype in memory"""
 
         self._finished.value = int(val)
-        print(self, 'setting finished as', self.finished)
 
     @abc.abstractmethod
     def _validate_init(self) -> None:
