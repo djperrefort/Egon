@@ -7,8 +7,15 @@ from . import connectors, nodes
 GeneratorFunction = Callable[[], Generator]
 
 
-def create_single_argument_function(func: callable) -> callable:
-    """Restructure a function to accept its arguments a single tuple"""
+def _create_single_arg_function(func: callable) -> callable:
+    """Restructure a function to accept its arguments a single tuple
+
+    Args:
+        func: The function to wrap
+
+    Returns:
+        A wrapped copy of ``func``
+    """
 
     # If the function already takes a single argument, there is nothing to do
     if len(inspect.getfullargspec(func).args) == 1:
@@ -24,7 +31,10 @@ def create_single_argument_function(func: callable) -> callable:
 
 
 def as_source(maxsize_output=0) -> Callable[[GeneratorFunction], nodes.Source]:
-    """Wrap a callable as a pipeline ``Source`` object
+    """Decorator for wrapping a callable as a pipeline ``Source`` object
+
+    Args:
+        maxsize_output: The maximum number of returned objects that can be stored in memory at once
 
     Returns:
         A wrapper for casting a function as a callable ``Source`` object
@@ -56,7 +66,7 @@ def as_target(maxsize_input=0) -> Callable[[callable], nodes.Target]:
     def wrapper(func: callable) -> nodes.Target:
         """Creates a class implementation of the given function"""
 
-        simplified_func = create_single_argument_function(func)
+        simplified_func = _create_single_arg_function(func)
 
         class WrappedTarget(nodes.Target):
             input = connectors.Input(maxsize_input)
@@ -82,7 +92,7 @@ def as_inline(maxsize_input=0, maxsize_output=0) -> Callable[[callable], nodes.I
     def wrapper(func: callable) -> nodes.Inline:
         """Creates a class implementation of the given function"""
 
-        simplified_func = create_single_argument_function(func)
+        simplified_func = _create_single_arg_function(func)
 
         class WrappedInline(nodes.Inline):
             input = connectors.Input(maxsize_input)

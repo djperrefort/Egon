@@ -49,7 +49,9 @@ class Pipeline(ProcessManager):
     def setup_pipeline(self) -> None:
         """Set up the pipeline and instantiate child processes"""
 
-        self.validate()
+        # Make sure the nodes are in a runnable condition before we start spawning processes
+        self._validate_nodes()
+
         self.processes = []
         for node in self.nodes():
             for i in range(node.num_processes):
@@ -64,8 +66,8 @@ class Pipeline(ProcessManager):
 
         return [getattr(self, a[0]) for a in inspect.getmembers(self, lambda a: isinstance(a, nodes.Node))]
 
-    def validate(self) -> None:
+    def _validate_nodes(self) -> None:
         """Check that the pipeline has no nodes with unassigned connectors"""
 
-        if not all(n.is_connected() for n in self.nodes()):
+        if not all(n._validate_connections() for n in self.nodes()):
             raise RuntimeError('Pipeline cannot run with disconnected inputs/outputs')

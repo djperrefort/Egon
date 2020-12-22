@@ -7,7 +7,7 @@ from abc import ABC
 from itertools import chain
 from typing import List, Union
 
-from . import connectors
+from . import connectors, exceptions
 
 
 class Node(abc.ABC):
@@ -17,15 +17,28 @@ class Node(abc.ABC):
         """Represents a single pipeline node"""
 
         self.num_processes = 1
-        self.processes: List[mp.Process] = []
-        self.finished = False
-        self._validate()
+        self._finished = mp.Value('i', 0)
 
         for connection in chain(self.input_connections(), self.output_connections()):
             connection._node = self
 
+        self._validate_init()
+
+    @property
+    def finished(self) -> bool:
+        """Whether the pipeline has finished processing data"""
+
+        return bool(self._finished.value)
+
+    @finished.setter
+    def finished(self, val: bool):
+        """Cast boolean to integer and store as a ctype in memory"""
+
+        self._finished.value = int(val)
+        print(self, 'setting finished as', self.finished)
+
     @abc.abstractmethod
-    def _validate(self) -> None:
+    def _validate_init(self) -> None:
         """Raise exception if the object is not a valid instance
 
         Raises:
@@ -33,6 +46,18 @@ class Node(abc.ABC):
         """
 
         pass
+
+    def _validate_connections(self) -> None:
+        """Raise exception if any of the node's Inputs/Outputs are missing connections
+
+        Raises:
+            MissingConnectionError: For an invalid instance construction
+        """
+
+        for conn in self._get_attrs(connectors.Connector):
+            if not conn.is_connected():
+                raise exceptions.MissingConnectionError(
+                    f'Connector {conn} does not have an established connection (Node: {conn.node})')
 
     def _get_attrs(self, attr_type=None) -> List:
         """Return a list of instance attributes matching the given type
@@ -45,11 +70,6 @@ class Node(abc.ABC):
         """
 
         return [getattr(self, a[0]) for a in inspect.getmembers(self, lambda a: isinstance(a, attr_type))]
-
-    def is_connected(self) -> bool:
-        """Returns True if all inputs/outputs are connected to other nodes"""
-
-        return all(c.is_connected() for c in self._get_attrs(connectors.Connector))
 
     def input_connections(self) -> List[connectors.Input]:
         """Returns a list of input connections assigned to the current _node
@@ -69,25 +89,21 @@ class Node(abc.ABC):
         return self._get_attrs(connectors.Output)
 
     def input_nodes(self) -> List[Union[Source, Inline]]:
-        """Returns a list of upstream pipeline nodes is_connected to the current _node"""
+        """Returns a list of upstream pipeline nodes _validate_connections to the current _node"""
 
-        return [c._node for c in self.input_connections()]
+        return list(filter(None, (c.source() for c in self.input_connections())))
 
     def output_nodes(self) -> List[Union[Inline, Target]]:
-        """Returns a list of downstream pipeline nodes is_connected to the current _node"""
+        """Returns a list of downstream pipeline nodes _validate_connections to the current _node"""
 
-        return [c._node for c in self.output_connections()]
+        return list(filter(None, (c.destination() for c in self.output_connections())))
 
     def setup(self) -> None:
         """Setup tasks called before running ``action``"""
 
-        pass
-
     @abc.abstractmethod
     def action(self) -> None:
         """The analysis task performed by the parent pipeline process"""
-
-        pass
 
     def teardown(self) -> None:
         """Teardown tasks called after running ``action``"""
@@ -108,35 +124,39 @@ class Node(abc.ABC):
 class Source(Node, ABC):
     """A pipeline process that only has output streams"""
 
-    def _validate(self) -> None:
+    def _validate_init(self) -> None:
         """Raise exception if the object is not a valid instance
 
         Raises:
-            ValueError: For an invalid instance construction
+            MalformedSourceError: For an invalid instance construction
+            OrphanedNodeError: For an instance that is inaccessible by connectors
         """
 
         if self.input_connections():
-            raise ValueError('Source objects cannot have upstream components')
+            raise exceptions.MalformedSourceError('Source objects cannot have upstream components.')
 
         if not self.output_connections():
-            raise ValueError('Source node has no output connectors')
+            raise exceptions.OrphanedNodeError(
+                'Source node has no output connectors and is inaccessible by the pipeline.')
 
 
 class Target(Node, ABC):
     """A pipeline process that only has input streams"""
 
-    def _validate(self) -> None:
+    def _validate_init(self) -> None:
         """Raise exception if the object is not a valid instance
 
         Raises:
-            ValueError: For an invalid instance construction
+            MalformedTargetError: For an invalid instance construction
+            OrphanedNodeError: For an instance that is inaccessible by connectors
         """
 
-        if not self.input_connections():
-            raise ValueError('Target node has no input connectors')
-
         if self.output_connections():
-            raise ValueError('Source objects cannot have upstream components')
+            raise exceptions.MalformedTargetError('Source objects cannot have upstream components.')
+
+        if not self.input_connections():
+            raise exceptions.OrphanedNodeError(
+                'Target node has no input connectors and is inaccessible by the pipeline.')
 
     def expecting_inputs(self) -> bool:
         """Return True if the node is still expecting data from upstream"""
@@ -150,12 +170,13 @@ class Target(Node, ABC):
 class Inline(Target, Source, ABC):
     """A pipeline process that can have any number of input or output streams"""
 
-    def _validate(self) -> None:
+    def _validate_init(self) -> None:
         """Raise exception if the object is not a valid instance
 
         Raises:
-            ValueError: For an invalid instance construction
+            OrphanedNodeError: For an instance that is inaccessible by connectors
         """
 
         if not (self.input_connections() or self.output_connections()):
-            raise ValueError('Inline node has no associated connectorsZ')
+            raise exceptions.OrphanedNodeError(
+                'Inline node has no associated connectors and is inaccessible by the pipeline.')

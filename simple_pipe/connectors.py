@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import multiprocessing as mp
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
-from .nodes import Node
+from .nodes import Inline, Node, Source, Target
 
 
 class DataStore:
@@ -47,12 +47,12 @@ class Connector(DataStore):
 
         super().__init__(maxsize)
         self._node: Optional[Node] = None  # The _node that this connector is assigned to
-        self._partner: Optional[Connector] = None  # The connector object of another _node
+        self._partner_connection: Optional[Connector] = None  # The connector object of another node
 
     def is_connected(self) -> bool:
         """Return whether the connector has an established connection"""
 
-        return not (self._partner is None)
+        return not (self._partner_connection is None)
 
     def connect(self, connector: Connector) -> None:
         """Establish the flow of data between this connector and another connector
@@ -67,15 +67,16 @@ class Connector(DataStore):
         if connector.is_connected():
             raise ValueError('Connector object already has a pre-established connection.')
 
-        self._partner = connector
-        connector._partner = self
+        # Once a connection is established between two connectors, they share an internal queue
+        self._partner_connection = connector
+        connector._partner_connection = self
         connector._queue = self._queue
 
     def disconnect(self) -> None:
         """Disconnect any established connections"""
 
-        old_partner = self._partner
-        self._partner = None
+        old_partner = self._partner_connection
+        self._partner_connection = None
         self._queue = mp.Queue(maxsize=self._maxsize)
 
         if old_partner:
@@ -90,6 +91,16 @@ class Input(Connector):
 
         return self._queue.get(block, timeout)
 
+    @property
+    def source(self) -> Optional[Union[Source, Inline]]:
+        """The Node feeding into this connection
+
+        Returns ``None`` if no connection has been established
+        """
+
+        return self._partner_connection._node
+
+
 class Output(Connector):
     """Handles the output of data from a pipeline node"""
 
@@ -97,3 +108,12 @@ class Output(Connector):
         """Add data into the connector"""
 
         self._queue.put(x)
+
+    @property
+    def destination(self) -> Optional[Union[Target, Inline]]:
+        """The Node receiving from this connection
+
+        Returns ``None`` if no connection has been established
+        """
+
+        return self._partner_connection._node
