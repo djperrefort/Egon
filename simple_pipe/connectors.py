@@ -45,11 +45,12 @@ class Connector(DataStore):
 
         return not (self._partner_connection is None)
 
-    def connect(self, connector: Connector) -> None:
+    def connect(self, connector: Connector, maxsize: int = 0) -> None:
         """Establish the flow of data between this connector and another connector
 
         Args:
             connector: The connector object ot connect with
+            maxsize: The maximum number of communicated items to store in memory
         """
 
         if type(connector) is type(self):
@@ -61,7 +62,7 @@ class Connector(DataStore):
         # Once a connection is established between two connectors, they share an internal queue
         self._partner_connection = connector
         connector._partner_connection = self
-        connector._queue = self._queue
+        connector._queue = self._queue = mp.Queue(maxsize)
 
     def disconnect(self) -> None:
         """Disconnect any established connections"""
