@@ -9,6 +9,10 @@ if TYPE_CHECKING:  # pragma: no cover
     from .nodes import Node, AbstractNode, Source, Target
 
 
+class KillSignal:
+    """Used to indicate that a process should exit"""
+
+
 class DataStore:
     """Exposes select functionality from an underlying ``Queue`` object"""
 
@@ -44,7 +48,7 @@ class Connector(DataStore):
         """Handles the communication of input/output data between pipeline nodes"""
 
         super().__init__()
-        self._node: Optional[AbstractNode] = None  # The _node that this connector is assigned to
+        self._node: Optional[AbstractNode] = None  # The node that this connector is assigned to
         self._connected_partner: Optional[Connector] = None  # The connector object of another node
 
     def is_connected(self) -> bool:
@@ -86,10 +90,36 @@ class Connector(DataStore):
 class Input(Connector):
     """Handles the input of data into a pipeline node"""
 
-    def get(self, block: bool = True, timeout: Optional[int] = None) -> Any:
-        """Retrieve data from the connector"""
+    def get(self, timeout: Optional[int] = None, refresh_interval: int = 10):
+        """Blocking call to retrieve input data
 
-        return self._queue.get(block, timeout)
+        Releases automatically when no more data is coming from upstream
+
+        Args:
+            timeout: Raise a TimeoutError if data is not retrieved within the given number of seconds
+            refresh_interval: How often to check if data is expected from upstream
+
+        Raises:
+            TimeOutError: Raised if the get call times out
+        """
+
+        if not refresh_interval > 0:
+            raise ValueError('Connector refresh interval must be greater than zero.')
+
+        remaining_time = timeout
+        while remaining_time > 0:
+            timeout_interval = min(abs(remaining_time - timeout), timeout)
+
+            if self.source_node.node_finished:
+                return KillSignal
+
+            try:
+                return self.get(timeout=timeout_interval)
+
+            except Exception as e:
+                remaining_time -= timeout_interval
+
+        raise e
 
     @property
     def source_connector(self) -> Connector:
