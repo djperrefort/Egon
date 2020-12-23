@@ -2,7 +2,7 @@ import inspect
 from typing import Type
 from unittest import TestCase
 
-from egon.decorators import as_inline, as_source, as_target
+from egon.decorators import as_node, as_source, as_target
 from egon.nodes import Node, Source, Target
 
 
@@ -51,9 +51,9 @@ class SourceWrapper(BaseTests, TestCase):
 
 
 class InlineWrapper(BaseTests, TestCase):
-    """Tests for the ``as_inline`` decorator"""
+    """Tests for the ``as_node`` decorator"""
 
-    wrapper = staticmethod(as_inline)
+    wrapper = staticmethod(as_node)
     return_type = Node
 
 

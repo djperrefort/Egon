@@ -77,16 +77,16 @@ def as_target(func: callable) -> nodes.Target:
     return WrappedTarget()
 
 
-def as_inline(func: callable) -> nodes.Node:
-    """Decorator for wrapping a callable as a pipeline ``Inline`` object
+def as_node(func: callable) -> nodes.Node:
+    """Decorator for wrapping a callable as a pipeline ``Node`` object
 
     Returns:
-        A wrapper for casting a function as a callable ``Inline`` object
+        A wrapper for casting a function as a callable ``Node`` object
     """
 
     simplified_func = _create_single_arg_function(func)
 
-    class WrappedInline(nodes.Node):
+    class WrappedNode(nodes.Node):
         input = connectors.Input()
         output = connectors.Output()
 
@@ -101,4 +101,4 @@ def as_inline(func: callable) -> nodes.Node:
                 out_data = simplified_func(in_data)
                 self.output.put(out_data)
 
-    return WrappedInline()
+    return WrappedNode()

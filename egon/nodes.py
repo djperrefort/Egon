@@ -133,8 +133,7 @@ class Source(AbstractNode, ABC):
             raise exceptions.MalformedSourceError('Source objects cannot have upstream components.')
 
         if not self.output_connections():
-            raise exceptions.OrphanedNodeError(
-                'Source node has no output connectors and is inaccessible by the pipeline.')
+            raise exceptions.OrphanedNodeError('Source has no output connectors and is inaccessible by the pipeline.')
 
 
 class Target(AbstractNode, ABC):
@@ -152,8 +151,7 @@ class Target(AbstractNode, ABC):
             raise exceptions.MalformedTargetError('Source objects cannot have upstream components.')
 
         if not self.input_connections():
-            raise exceptions.OrphanedNodeError(
-                'Target node has no input connectors and is inaccessible by the pipeline.')
+            raise exceptions.OrphanedNodeError('Target has no input connectors and is inaccessible by the pipeline.')
 
     def expecting_inputs(self) -> bool:
         """Return True if the node is still expecting data from upstream"""
@@ -175,5 +173,4 @@ class Node(Target, Source, ABC):
         """
 
         if not (self.input_connections() or self.output_connections()):
-            raise exceptions.OrphanedNodeError(
-                'Inline node has no associated connectors and is inaccessible by the pipeline.')
+            raise exceptions.OrphanedNodeError('Node has no associated connectors and is inaccessible by the pipeline.')
