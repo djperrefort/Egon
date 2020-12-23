@@ -72,9 +72,9 @@ class TreeNavigation(TestCase):
     def test_parent_node(self) -> None:
         """Test the inline node resolves the correct parent node"""
 
-        self.assertEqual(self.internal_node.input_nodes()[0], self.root_node)
+        self.assertEqual(self.internal_node.upstream_nodes()[0], self.root_node)
 
     def test_child_node(self) -> None:
         """Test the inline node resolves the correct child node"""
 
-        self.assertEqual(self.internal_node.output_nodes()[0], self.root_node)
+        self.assertEqual(self.internal_node.downstream_nodes()[0], self.root_node)

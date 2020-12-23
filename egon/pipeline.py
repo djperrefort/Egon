@@ -1,31 +1,43 @@
 from __future__ import annotations
 
-import inspect
-import multiprocessing as mp
-from typing import List
+from inspect import getmembers
 
 from . import nodes
 
 
-class ProcessManager:
-    """Handles the starting and termination of forked processes"""
+class Pipeline:
+    """Manages a collection of nodes as a single analysis pipeline"""
 
-    processes: List
+    nodes: list
+    _processes: list
+
+    def setup_pipeline(self) -> None:
+        """Set up the pipeline and instantiate child _processes"""
+
+        # Make sure the nodes are in a runnable condition before we start spawning _processes
+        self.nodes = [getattr(self, a[0]) for a in getmembers(self, lambda a: isinstance(a, nodes.AbstractNode))]
+        for node in self.nodes:
+            node.validate_connections()
+
+        # Collect all of the processes assigned to each node
+        self._processes = []
+        for node in self.nodes:
+            self._processes.extend(node._processes)
 
     @property
-    def process_count(self) -> int:
-        """The number of processes assigned to the pipeline"""
+    def num_processes(self) -> int:
+        """The number of _processes assigned to the pipeline"""
 
-        return len(self.processes)
+        return len(self._processes)
 
     def kill(self) -> None:
-        """Kill all running pipeline processes without trying to exit gracefully"""
+        """Kill all running pipeline _processes without trying to exit gracefully"""
 
-        for p in self.processes:
+        for p in self._processes:
             p.terminate()
 
     def run(self) -> None:
-        """Start all pipeline processes and block execution until all processes exit"""
+        """Start all pipeline _processes and block execution until all _processes exit"""
 
         self.run_async()
         self.wait_for_exit()
@@ -33,41 +45,11 @@ class ProcessManager:
     def wait_for_exit(self) -> None:
         """Wait for the pipeline to finish running before continuing execution"""
 
-        for p in self.processes:
+        for p in self._processes:
             p.join()
 
     def run_async(self) -> None:
-        """Start all processes asynchronously"""
+        """Start all _processes asynchronously"""
 
-        for p in self.processes:
+        for p in self._processes:
             p.start()
-
-
-class Pipeline(ProcessManager):
-    """Manages a collection of nodes as a single analysis pipeline"""
-
-    def setup_pipeline(self) -> None:
-        """Set up the pipeline and instantiate child processes"""
-
-        # Make sure the nodes are in a runnable condition before we start spawning processes
-        self._validate_nodes()
-
-        self.processes = []
-        for node in self.nodes():
-            for i in range(node.num_processes):
-                self.processes.append(mp.Process(target=node.execute))
-
-    def nodes(self) -> List[nodes.AbstractNode]:
-        """Returns a list of all nodes in the pipeline
-
-        Returns:
-            A list of ``Node`` instances
-        """
-
-        return [getattr(self, a[0]) for a in inspect.getmembers(self, lambda a: isinstance(a, nodes.AbstractNode))]
-
-    def _validate_nodes(self) -> None:
-        """Check that the pipeline has no nodes with unassigned connectors"""
-
-        for n in self.nodes():
-            n._validate_connections()

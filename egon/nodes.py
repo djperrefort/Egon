@@ -16,8 +16,8 @@ class AbstractNode(abc.ABC):
     def __init__(self, num_processes=1) -> None:
         """Represents a single pipeline node"""
 
-        self.processes = [mp.Process(target=self.execute) for _ in range(num_processes)]
-        self._states = mp.Manager().dict({p.pid: False for p in self.processes})
+        self._processes = [mp.Process(target=self.execute) for _ in range(num_processes)]
+        self._states = mp.Manager().dict({p.pid: False for p in self._processes})
         for connection in chain(self.input_connections(), self.output_connections()):
             connection._node = self
 
@@ -35,7 +35,7 @@ class AbstractNode(abc.ABC):
 
     @property
     def node_finished(self) -> bool:
-        """Return whether the all node processes have finished processing data"""
+        """Return whether the all node _processes have finished processing data"""
 
         return all(self._states.values())
 
@@ -47,7 +47,7 @@ class AbstractNode(abc.ABC):
             ValueError: For an invalid instance construction
         """
 
-    def _validate_connections(self) -> None:
+    def validate_connections(self) -> None:
         """Raise exception if any of the node's Inputs/Outputs are missing connections
 
         Raises:
@@ -88,13 +88,13 @@ class AbstractNode(abc.ABC):
 
         return self._get_attrs(connectors.Output)
 
-    def input_nodes(self) -> List[Union[Source, Node]]:
-        """Returns a list of upstream pipeline nodes _validate_connections to the current _node"""
+    def upstream_nodes(self) -> List[Union[Source, Node]]:
+        """Returns a list of nodes that are upstream from the current node"""
 
         return list(filter(None, (c.source_node for c in self.input_connections())))
 
-    def output_nodes(self) -> List[Union[Node, Target]]:
-        """Returns a list of downstream pipeline nodes _validate_connections to the current _node"""
+    def downstream_nodes(self) -> List[Union[Node, Target]]:
+        """Returns a list of nodes that are downstream from the current node"""
 
         return list(filter(None, (c.destination_node for c in self.output_connections())))
 
@@ -160,7 +160,7 @@ class Target(AbstractNode, ABC):
         """Return True if the node is still expecting data from upstream"""
 
         return not (
-                all(n.node_finished for n in self.input_nodes()) and
+                all(n.node_finished for n in self.upstream_nodes()) and
                 all(c.empty() for c in self.input_connections())
         )
 
