@@ -1,8 +1,8 @@
 from egon.connectors import Input, Output
-from egon.nodes import Node, Source, Target
+from egon.nodes import AbstractNode, Source, Target
 
 
-class MockNode(Node):
+class MockNode(AbstractNode):
     """A ``Node`` subclass that implements placeholder functions for abstract methods"""
 
     def _validate_init(self) -> None:

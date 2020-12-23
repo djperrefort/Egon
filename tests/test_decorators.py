@@ -3,7 +3,7 @@ from typing import Type
 from unittest import TestCase
 
 from egon.decorators import as_inline, as_source, as_target
-from egon.nodes import Inline, Source, Target
+from egon.nodes import Node, Source, Target
 
 
 def function_add(x: int, y: int) -> int:
@@ -54,7 +54,7 @@ class InlineWrapper(BaseTests, TestCase):
     """Tests for the ``as_inline`` decorator"""
 
     wrapper = staticmethod(as_inline)
-    return_type = Inline
+    return_type = Node
 
 
 class TargetWrapper(BaseTests, TestCase):

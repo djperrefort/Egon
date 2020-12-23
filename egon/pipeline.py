@@ -57,14 +57,14 @@ class Pipeline(ProcessManager):
             for i in range(node.num_processes):
                 self.processes.append(mp.Process(target=node.execute))
 
-    def nodes(self) -> List[nodes.Node]:
+    def nodes(self) -> List[nodes.AbstractNode]:
         """Returns a list of all nodes in the pipeline
 
         Returns:
             A list of ``Node`` instances
         """
 
-        return [getattr(self, a[0]) for a in inspect.getmembers(self, lambda a: isinstance(a, nodes.Node))]
+        return [getattr(self, a[0]) for a in inspect.getmembers(self, lambda a: isinstance(a, nodes.AbstractNode))]
 
     def _validate_nodes(self) -> None:
         """Check that the pipeline has no nodes with unassigned connectors"""

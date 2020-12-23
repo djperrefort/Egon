@@ -2,7 +2,7 @@ from unittest import TestCase, skip
 
 from egon import exceptions
 from egon.connectors import Input, Output
-from egon.nodes import Inline, Source, Target
+from egon.nodes import Node, Source, Target
 
 
 class BaseTests:
@@ -52,7 +52,7 @@ class TargetValidation(BaseTests, TestCase):
 class InlineValidation(BaseTests, TestCase):
     """Test the validation of ``Inline`` nodes"""
 
-    node_type = Inline
+    node_type = Node
 
     @skip('Inline nodes cannot be malformed')
     def test_error_if_malformed(self) -> None:

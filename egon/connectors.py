@@ -6,7 +6,7 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 from . import exceptions
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .nodes import Inline, Node, Source, Target
+    from .nodes import Node, AbstractNode, Source, Target
 
 
 class DataStore:
@@ -44,7 +44,7 @@ class Connector(DataStore):
         """Handles the communication of input/output data between pipeline nodes"""
 
         super().__init__()
-        self._node: Optional[Node] = None  # The _node that this connector is assigned to
+        self._node: Optional[AbstractNode] = None  # The _node that this connector is assigned to
         self._connected_partner: Optional[Connector] = None  # The connector object of another node
 
     def is_connected(self) -> bool:
@@ -101,7 +101,7 @@ class Input(Connector):
         return self._connected_partner
 
     @property
-    def source_node(self) -> Optional[Union[Source, Inline]]:
+    def source_node(self) -> Optional[Union[Source, Node]]:
         """The connected pipeline node feeding into this connection
 
         Returns ``None`` if no connection has been established
@@ -128,7 +128,7 @@ class Output(Connector):
         return self._connected_partner
 
     @property
-    def destination_node(self) -> Optional[Union[Target, Inline]]:
+    def destination_node(self) -> Optional[Union[Target, Node]]:
         """The connected pipeline node receiving data from this connector
 
         Returns ``None`` if no connection has been established

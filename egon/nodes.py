@@ -10,7 +10,7 @@ from typing import List, Union
 from . import connectors, exceptions
 
 
-class Node(abc.ABC):
+class AbstractNode(abc.ABC):
     """Base class for constructing pipeline nodes"""
 
     def __init__(self) -> None:
@@ -85,12 +85,12 @@ class Node(abc.ABC):
 
         return self._get_attrs(connectors.Output)
 
-    def input_nodes(self) -> List[Union[Source, Inline]]:
+    def input_nodes(self) -> List[Union[Source, Node]]:
         """Returns a list of upstream pipeline nodes _validate_connections to the current _node"""
 
         return list(filter(None, (c.source_node for c in self.input_connections())))
 
-    def output_nodes(self) -> List[Union[Inline, Target]]:
+    def output_nodes(self) -> List[Union[Node, Target]]:
         """Returns a list of downstream pipeline nodes _validate_connections to the current _node"""
 
         return list(filter(None, (c.destination_node for c in self.output_connections())))
@@ -118,7 +118,7 @@ class Node(abc.ABC):
         self.finished = True
 
 
-class Source(Node, ABC):
+class Source(AbstractNode, ABC):
     """A pipeline process that only has output streams"""
 
     def _validate_init(self) -> None:
@@ -137,7 +137,7 @@ class Source(Node, ABC):
                 'Source node has no output connectors and is inaccessible by the pipeline.')
 
 
-class Target(Node, ABC):
+class Target(AbstractNode, ABC):
     """A pipeline process that only has input streams"""
 
     def _validate_init(self) -> None:
@@ -164,7 +164,7 @@ class Target(Node, ABC):
         )
 
 
-class Inline(Target, Source, ABC):
+class Node(Target, Source, ABC):
     """A pipeline process that can have any number of input or output streams"""
 
     def _validate_init(self) -> None:

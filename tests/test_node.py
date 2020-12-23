@@ -2,7 +2,7 @@ from functools import partial
 from unittest import TestCase
 
 from egon.connectors import Input, Output
-from egon.nodes import Inline, Source, Target
+from egon.nodes import Node, Source, Target
 from . import mock
 
 
