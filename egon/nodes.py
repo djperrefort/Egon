@@ -13,28 +13,31 @@ from . import connectors, exceptions
 class AbstractNode(abc.ABC):
     """Base class for constructing pipeline nodes"""
 
-    def __init__(self) -> None:
+    def __init__(self, num_processes=1) -> None:
         """Represents a single pipeline node"""
 
-        self.num_processes = 1
-        self._finished = mp.Value('i', 0)
-
+        self.processes = [mp.Process(target=self.execute) for _ in range(num_processes)]
+        self._states = mp.Manager().dict({p.pid: False for p in self.processes})
         for connection in chain(self.input_connections(), self.output_connections()):
             connection._node = self
 
         self._validate_init()
 
     @property
-    def finished(self) -> bool:
-        """Whether the pipeline has finished processing data"""
+    def process_finished(self) -> bool:
+        """Return whether the current process has finished processing data"""
 
-        return bool(self._finished.value)
+        return self._states[mp.current_process().pid]
 
-    @finished.setter
-    def finished(self, val: bool):
-        """Cast boolean to integer and store as a ctype in memory"""
+    @process_finished.setter
+    def process_finished(self, state: bool) -> None:
+        self._states[mp.current_process().pid] = state
 
-        self._finished.value = int(val)
+    @property
+    def node_finished(self) -> bool:
+        """Return whether the all node processes have finished processing data"""
+
+        return all(self._states.values())
 
     @abc.abstractmethod
     def _validate_init(self) -> None:
@@ -115,7 +118,7 @@ class AbstractNode(abc.ABC):
         self.setup()
         self.action()
         self.teardown()
-        self.finished = True
+        self.process_finished = True
 
 
 class Source(AbstractNode, ABC):
@@ -157,7 +160,7 @@ class Target(AbstractNode, ABC):
         """Return True if the node is still expecting data from upstream"""
 
         return not (
-                all(n.finished for n in self.input_nodes()) and
+                all(n.node_finished for n in self.input_nodes()) and
                 all(c.empty() for c in self.input_connections())
         )
 
