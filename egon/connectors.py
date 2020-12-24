@@ -152,9 +152,9 @@ class Input(Connector):
                 return KillSignal
 
             try:
-                return self.get(timeout=min(timeout, refresh_interval))
+                return self._queue.get(timeout=min(timeout, refresh_interval))
 
-            except:
+            except TimeoutError:
                 timeout -= refresh_interval
 
         raise TimeoutError

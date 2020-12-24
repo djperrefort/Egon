@@ -1,5 +1,5 @@
 """Tests for connector objects defined in the ``connectors`` module"""
-
+from asyncio import sleep
 from unittest import TestCase
 
 from egon import exceptions
@@ -132,7 +132,7 @@ class InputGet(TestCase):
 
         test_val = 'test_val'
         self.target.input._queue.put(test_val)
-        self.assertEqual(self.target.input.get(timeout=15), test_val)
+        self.assertEqual(self.target.input.get(timeout=1000), test_val)
 
 
 class OutputSet(TestCase):
