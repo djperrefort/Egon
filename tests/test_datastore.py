@@ -1,5 +1,6 @@
-from unittest import TestCase
 import time
+from unittest import TestCase
+
 from egon.connectors import DataStore
 
 
