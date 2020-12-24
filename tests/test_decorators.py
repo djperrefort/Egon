@@ -19,7 +19,9 @@ class BaseTests:
     return_type: Type  # The expected return type of the decorator
 
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls) -> None:
+        """Wrap the ``function_add`` function with a decorator"""
+
         cls.wrapped_function = cls.wrapper(function_add)
 
     def test_wrapped_return_type(self) -> None:

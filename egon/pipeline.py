@@ -37,7 +37,7 @@ class Pipeline:
             p.terminate()
 
     def run(self) -> None:
-        """Start all pipeline _processes and block execution until all _processes exit"""
+        """Start all pipeline _processes and block execution until all processes exit"""
 
         self.run_async()
         self.wait_for_exit()

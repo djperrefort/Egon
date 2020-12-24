@@ -1,3 +1,5 @@
+"""The ``exceptions`` class defines custom exceptions raised by the ``egon`` package."""
+
 class MissingConnectionError(Exception):
     """Raised when a connector is left unconnected at pipeline runtime."""
 
