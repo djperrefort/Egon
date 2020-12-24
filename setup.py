@@ -5,7 +5,10 @@ from setuptools import find_packages, setup
 
 import egon
 
-# Get package version
+# Get list of requirements
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+
 setup(name='egon',
       version=egon.__version__,
       packages=find_packages(),
@@ -22,4 +25,5 @@ setup(name='egon',
       author_email='djperrefort@pitt.edu',
       license='GPL v3',
       python_requires='>=3.6',
+      install_requires=requirements
       )
