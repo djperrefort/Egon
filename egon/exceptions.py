@@ -11,7 +11,7 @@ class MalformedTargetError(Exception):
 
 
 class OrphanedNodeError(Exception):
-    """Raised when a ``Node`` pipeline is inaccessible by the pipeline due to missing connectors."""
+    """Raised when a ``Node`` is inaccessible by the pipeline due to missing connectors."""
 
 
 class OverwriteConnectionError(Exception):

@@ -2,8 +2,8 @@ from egon.connectors import Input, Output
 from egon.nodes import AbstractNode, Source, Target
 
 
-class MockNode(AbstractNode):
-    """A ``Node`` subclass that implements placeholder functions for abstract methods"""
+class Mock(AbstractNode):
+    """A ``AbstractNode`` subclass that implements placeholder functions for abstract methods"""
 
     def _validate_init(self) -> None:
         """Placeholder function to satisfy requirements of abstract parent"""
@@ -12,7 +12,7 @@ class MockNode(AbstractNode):
         """Placeholder function to satisfy requirements of abstract parent"""
 
 
-class MockSource(Source, MockNode):
+class MockSource(Source, Mock):
     """A ``Source`` subclass that implements placeholder functions for abstract methods"""
 
     def __init__(self) -> None:
@@ -20,7 +20,7 @@ class MockSource(Source, MockNode):
         self.second_output = Output()
 
 
-class MockTarget(Target, MockNode):
+class MockTarget(Target, Mock):
     """A ``Target`` subclass that implements placeholder functions for abstract methods"""
 
     def __init__(self) -> None:
@@ -28,14 +28,11 @@ class MockTarget(Target, MockNode):
         self.second_input = Input()
 
 
-class MockInline(MockSource, MockTarget):
-    """A ``Inline`` subclass that implements placeholder functions for abstract methods"""
+class MockNode(MockSource, MockTarget):
+    """A ``Node`` subclass that implements placeholder functions for abstract methods"""
 
     def __init__(self) -> None:
         self.output = Output()
         self.second_output = Output()
         self.input = Input()
         self.second_input = Input()
-
-    def _validate_init(self) -> None:
-        """Placeholder function to satisfy requirements of abstract parent"""

@@ -12,7 +12,7 @@ class Execution(TestCase):
     def setUp(self) -> None:
         """Create a testing node that tracks the execution method of it's methods"""
 
-        self.node = mock.MockNode()
+        self.node = mock.Mock()
 
         # Track the call order of node functions
         self.call_list = []
@@ -41,7 +41,7 @@ class TestConnectorLists(TestCase):
     def setUp(self) -> None:
         """Create a ``MockNode`` instance"""
 
-        self.node = mock.MockNode()
+        self.node = mock.Mock()
 
     def test_all_inputs_are_listed(self) -> None:
         """Test all input connectors are included in ``node.input_connections``"""
@@ -63,7 +63,7 @@ class TreeNavigation(TestCase):
         """Create a tree of ``MockNode`` instances"""
 
         self.root_node = mock.MockSource()
-        self.internal_node = mock.MockInline()
+        self.internal_node = mock.MockNode()
         self.leaf_node = mock.MockTarget()
 
         self.root_node.output.connect(self.internal_node.input)

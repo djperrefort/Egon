@@ -1,12 +1,37 @@
+"""``Connector`` objects are responsible for the communication of information
+between nodes. Each connector instance is assigned to a single node and can be
+used to send or receive data depending on the type of connector.
+``Output`` connectors are used to send data where as ``Input`` objects are
+used to receive.
+
+.. doctest:: python
+
+   >>> from egon.connectors import Input, Output
+   >>> from egon.nodes import Node
+
+   >>> class Foo(Node):
+   ...     input_data = Input()
+   ...     output_data = Output()
+   ...
+   ...     def action(self):
+   ...         while True:
+   ...             data = self.input_data.get() # Retrieve the data
+   ...             if data is KillSignal:
+   ...                 break
+   ...
+   ...             # Apply some analysis procedure here
+   ...             self.output_data.put(data)  # Pass the data on to the next node
+"""
+
 from __future__ import annotations
 
 import multiprocessing as mp
-from typing import Any, Optional, TYPE_CHECKING, Union
+from typing import Any, Optional, TYPE_CHECKING
 
 from . import exceptions
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .nodes import Node, AbstractNode, Source, Target
+    from .nodes import Node, AbstractNode
 
 
 class KillSignal:
@@ -42,7 +67,7 @@ class DataStore:
 
 
 class Connector(DataStore):
-    """Base class for signal/slot like objects"""
+    """Base class for signal/slot-like connector objects"""
 
     def __init__(self) -> None:
         """Handles the communication of input/output data between pipeline nodes"""
@@ -86,6 +111,21 @@ class Connector(DataStore):
         if old_partner:
             old_partner.disconnect()
 
+    @property
+    def partner(self) -> Connector:
+        """The connector object connected to this instance
+
+        Returns ``None`` if no connection has been established
+        """
+
+        return self._connected_partner
+
+    @property
+    def parent_node(self) -> AbstractNode:
+        """The parent node this connector is assigned to"""
+
+        return self._node
+
 
 class Input(Connector):
     """Handles the input of data into a pipeline node"""
@@ -106,38 +146,18 @@ class Input(Connector):
         if not refresh_interval > 0:
             raise ValueError('Connector refresh interval must be greater than zero.')
 
-        remaining_time = timeout
-        while remaining_time > 0:
-            timeout_interval = min(abs(remaining_time - timeout), timeout)
-
-            if self.source_node.node_finished:
+        timeout = timeout or float('inf')
+        while timeout > 0:
+            if self.parent_node.node_finished:
                 return KillSignal
 
             try:
-                return self.get(timeout=timeout_interval)
+                return self.get(timeout=min(timeout, refresh_interval))
 
             except Exception as e:
-                remaining_time -= timeout_interval
+                timeout -= refresh_interval
 
         raise e
-
-    @property
-    def source_connector(self) -> Connector:
-        """The connector object connected to this instance
-
-        Returns ``None`` if no connection has been established
-        """
-
-        return self._connected_partner
-
-    @property
-    def source_node(self) -> Optional[Union[Source, Node]]:
-        """The connected pipeline node feeding into this connection
-
-        Returns ``None`` if no connection has been established
-        """
-
-        return self.source_connector._node
 
 
 class Output(Connector):
@@ -147,21 +167,3 @@ class Output(Connector):
         """Add data into the connector"""
 
         self._queue.put(x)
-
-    @property
-    def destination_connector(self) -> Connector:
-        """The connector object connected to this instance
-
-        Returns ``None`` if no connection has been established
-        """
-
-        return self._connected_partner
-
-    @property
-    def destination_node(self) -> Optional[Union[Target, Node]]:
-        """The connected pipeline node receiving data from this connector
-
-        Returns ``None`` if no connection has been established
-        """
-
-        return self.destination_connector._node
