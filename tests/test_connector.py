@@ -114,7 +114,7 @@ class InputGet(TestCase):
 
         test_val = 'test_val'
         self.target.input._queue.put(test_val)
-        self.assertEqual(self.target.input.get(), test_val)
+        self.assertEqual(self.target.input.get(timeout=15), test_val)
 
 
 class OutputSet(TestCase):

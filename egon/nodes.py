@@ -18,7 +18,9 @@ class AbstractNode(abc.ABC):
 
         self._processes = [mp.Process(target=self.execute) for _ in range(num_processes)]
         self._states = mp.Manager().dict({p.pid: False for p in self._processes})
-        for connection in chain(self.input_connections(), self.output_connections()):
+        self._current_process_state = False
+
+        for connection in chain(self.get_inputs(), self._get_outputs()):
             connection._node = self
 
         self._validate_init()
@@ -27,11 +29,11 @@ class AbstractNode(abc.ABC):
     def process_finished(self) -> bool:
         """Return whether the current process has finished processing data"""
 
-        return self._states[mp.current_process().pid]
+        return self._states.get(mp.current_process().pid, self._current_process_state)
 
     @process_finished.setter
     def process_finished(self, state: bool) -> None:
-        self._states[mp.current_process().pid] = state
+        self._states[mp.current_process().pid] = self._current_process_state = state
 
     @property
     def node_finished(self) -> bool:
@@ -71,7 +73,7 @@ class AbstractNode(abc.ABC):
 
         return [getattr(self, a[0]) for a in inspect.getmembers(self, lambda a: isinstance(a, attr_type))]
 
-    def input_connections(self) -> List[connectors.Input]:
+    def get_inputs(self) -> List[connectors.Input]:
         """Returns a list of input connections assigned to the current _node
 
         Returns:
@@ -79,7 +81,7 @@ class AbstractNode(abc.ABC):
         """
         return self._get_attrs(connectors.Input)
 
-    def output_connections(self) -> List[connectors.Output]:
+    def _get_outputs(self) -> List[connectors.Output]:
         """Returns a list of output connections assigned to the current _node
 
         Returns:
@@ -91,12 +93,12 @@ class AbstractNode(abc.ABC):
     def upstream_nodes(self) -> List[Union[Source, Node]]:
         """Returns a list of nodes that are upstream from the current node"""
 
-        return list(filter(None, (c.source_node for c in self.input_connections())))
+        return list(filter(None, (c.partner.parent_node for c in self.get_inputs())))
 
     def downstream_nodes(self) -> List[Union[Node, Target]]:
         """Returns a list of nodes that are downstream from the current node"""
 
-        return list(filter(None, (c.destination_node for c in self.output_connections())))
+        return list(filter(None, (c.partner.parent_node for c in self._get_outputs())))
 
     def setup(self) -> None:
         """Setup tasks called before running ``action``"""
@@ -132,10 +134,10 @@ class Source(AbstractNode, ABC):
             OrphanedNodeError: For an instance that is inaccessible by connectors
         """
 
-        if self.input_connections():
+        if self.get_inputs():
             raise exceptions.MalformedSourceError('Source objects cannot have upstream components.')
 
-        if not self.output_connections():
+        if not self._get_outputs():
             raise exceptions.OrphanedNodeError('Source has no output connectors and is inaccessible by the pipeline.')
 
 
@@ -150,10 +152,10 @@ class Target(AbstractNode, ABC):
             OrphanedNodeError: For an instance that is inaccessible by connectors
         """
 
-        if self.output_connections():
+        if self._get_outputs():
             raise exceptions.MalformedTargetError('Source objects cannot have upstream components.')
 
-        if not self.input_connections():
+        if not self.get_inputs():
             raise exceptions.OrphanedNodeError('Target has no input connectors and is inaccessible by the pipeline.')
 
     def expecting_inputs(self) -> bool:
@@ -161,7 +163,7 @@ class Target(AbstractNode, ABC):
 
         return not (
                 all(n.node_finished for n in self.upstream_nodes()) and
-                all(c.empty() for c in self.input_connections())
+                all(c.empty() for c in self.get_inputs())
         )
 
 
@@ -175,5 +177,5 @@ class Node(Target, Source, ABC):
             OrphanedNodeError: For an instance that is inaccessible by connectors
         """
 
-        if not (self.input_connections() or self.output_connections()):
+        if not (self.get_inputs() or self._get_outputs()):
             raise exceptions.OrphanedNodeError('Node has no associated connectors and is inaccessible by the pipeline.')

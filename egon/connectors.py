@@ -154,10 +154,10 @@ class Input(Connector):
             try:
                 return self.get(timeout=min(timeout, refresh_interval))
 
-            except Exception as e:
+            except:
                 timeout -= refresh_interval
 
-        raise e
+        raise TimeoutError
 
 
 class Output(Connector):

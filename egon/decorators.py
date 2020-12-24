@@ -1,3 +1,7 @@
+"""Function decorators from the ``decorators`` module provide a shorthand for
+creating pipeline nodes from pre-built functions.
+"""
+
 from typing import Any, Callable, Generator
 
 from . import connectors, nodes
@@ -6,6 +10,8 @@ GeneratorFunction = Callable[[], Generator]
 
 
 class Wrapper:
+    """Base class for wrapping functions as node-like pipeline objects"""
+
     _func: callable
 
     def __init__(self, func: callable):
@@ -39,30 +45,18 @@ class WrappedNode(Wrapper, nodes.Node):
 
 
 def as_source(func: GeneratorFunction) -> WrappedSource:
-    """Decorator for wrapping a callable as a pipeline ``Source`` object
-
-    Returns:
-        A wrapper for casting a function as a callable ``Source`` object
-    """
+    """Decorator for wrapping a callable as a pipeline ``Source`` object"""
 
     return WrappedSource(func)
 
 
 def as_target(func: callable) -> WrappedTarget:
-    """Decorator for wrapping a callable as a pipeline ``Target`` object
-
-    Returns:
-        A wrapper for casting a function as a callable ``Target`` object
-    """
+    """Decorator for wrapping a callable as a pipeline ``Target`` object"""
 
     return WrappedTarget(func)
 
 
 def as_node(func: callable) -> WrappedNode:
-    """Decorator for wrapping a callable as a pipeline ``Node`` object
-
-    Returns:
-        A wrapper for casting a function as a callable ``Node`` object
-    """
+    """Decorator for wrapping a callable as a pipeline ``Node`` object"""
 
     return WrappedNode(func)
