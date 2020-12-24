@@ -1,4 +1,4 @@
-"""Tests for objects defined in the ``connectors`` module"""
+"""Tests for connector objects defined in the ``connectors`` module"""
 
 from unittest import TestCase
 
@@ -108,6 +108,13 @@ class InputGet(TestCase):
 
         # Create a node with an input connector
         self.target = MockTarget()
+
+    def test_error_on_non_positive_refresh(self) -> None:
+        with self.assertRaises(ValueError):
+            self.target.input.get(timeout=15, refresh_interval=0)
+
+        with self.assertRaises(ValueError):
+            self.target.input.get(timeout=15, refresh_interval=-1)
 
     def test_returns_queue_value(self) -> None:
         """Test the ``get`` method retrieves data from the underlying queue"""

@@ -1,3 +1,5 @@
+"""Tests for the ``DataStore`` class"""
+
 import time
 from unittest import TestCase
 
