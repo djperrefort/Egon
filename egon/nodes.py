@@ -4,10 +4,27 @@ import abc
 import inspect
 import multiprocessing as mp
 from abc import ABC
-from itertools import chain
-from typing import List, Union
+from typing import List, Union, Collection
 
 from . import connectors, exceptions
+
+
+def _get_nodes_from_connectors(connector_list: Collection[connectors.Connector]) -> List:
+    """Return the parent nodes from a list of Connector objects
+    
+    Args:
+        connector_list: The connectors to get parents of
+        
+    Returns:
+        A list of ``AbstractNode`` instances
+    """
+
+    nodes = []
+    for c in connector_list:
+        if c.is_connected():
+            nodes.append(c.partner.parent_node)
+
+    return nodes
 
 
 class AbstractNode(abc.ABC):
@@ -20,10 +37,16 @@ class AbstractNode(abc.ABC):
         self._states = mp.Manager().dict({p.pid: False for p in self._processes})
         self._current_process_state = False
 
-        for connection in chain(self.get_inputs(), self._get_outputs()):
+        for connection in self._get_attrs(connectors.Connector):
             connection._node = self
 
         self._validate_init()
+
+    @property
+    def num_processes(self) -> int:
+        """The number of processes assigned to the current node"""
+
+        return len(self._processes)
 
     @property
     def process_finished(self) -> bool:
@@ -73,7 +96,7 @@ class AbstractNode(abc.ABC):
 
         return [getattr(self, a[0]) for a in inspect.getmembers(self, lambda a: isinstance(a, attr_type))]
 
-    def get_inputs(self) -> List[connectors.Input]:
+    def _get_inputs(self) -> List[connectors.Input]:
         """Returns a list of input connections assigned to the current _node
 
         Returns:
@@ -81,24 +104,15 @@ class AbstractNode(abc.ABC):
         """
         return self._get_attrs(connectors.Input)
 
-    def _get_outputs(self) -> List[connectors.Output]:
-        """Returns a list of output connections assigned to the current _node
-
-        Returns:
-            A list of ``Output`` connection objects
-        """
-
-        return self._get_attrs(connectors.Output)
-
     def upstream_nodes(self) -> List[Union[Source, Node]]:
         """Returns a list of nodes that are upstream from the current node"""
 
-        return list(filter(None, (c.partner.parent_node for c in self.get_inputs())))
+        return _get_nodes_from_connectors(self._get_inputs())
 
     def downstream_nodes(self) -> List[Union[Node, Target]]:
         """Returns a list of nodes that are downstream from the current node"""
 
-        return list(filter(None, (c.partner.parent_node for c in self._get_outputs())))
+        return _get_nodes_from_connectors(self._get_attrs(connectors.Output))
 
     def setup(self) -> None:
         """Setup tasks called before running ``action``"""
@@ -134,10 +148,10 @@ class Source(AbstractNode, ABC):
             OrphanedNodeError: For an instance that is inaccessible by connectors
         """
 
-        if self.get_inputs():
+        if self._get_attrs(connectors.Input):
             raise exceptions.MalformedSourceError('Source objects cannot have upstream components.')
 
-        if not self._get_outputs():
+        if not self._get_attrs(connectors.Output):
             raise exceptions.OrphanedNodeError('Source has no output connectors and is inaccessible by the pipeline.')
 
 
@@ -152,19 +166,11 @@ class Target(AbstractNode, ABC):
             OrphanedNodeError: For an instance that is inaccessible by connectors
         """
 
-        if self._get_outputs():
+        if self._get_attrs(connectors.Output):
             raise exceptions.MalformedTargetError('Source objects cannot have upstream components.')
 
-        if not self.get_inputs():
+        if not self._get_attrs(connectors.Input):
             raise exceptions.OrphanedNodeError('Target has no input connectors and is inaccessible by the pipeline.')
-
-    def expecting_inputs(self) -> bool:
-        """Return True if the node is still expecting data from upstream"""
-
-        return not (
-                all(n.node_finished for n in self.upstream_nodes()) and
-                all(c.empty() for c in self.get_inputs())
-        )
 
 
 class Node(Target, Source, ABC):
@@ -177,5 +183,5 @@ class Node(Target, Source, ABC):
             OrphanedNodeError: For an instance that is inaccessible by connectors
         """
 
-        if not (self.get_inputs() or self._get_outputs()):
+        if not self._get_attrs(connectors.Connector):
             raise exceptions.OrphanedNodeError('Node has no associated connectors and is inaccessible by the pipeline.')
