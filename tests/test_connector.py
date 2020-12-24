@@ -25,47 +25,56 @@ class InstanceConnections(TestCase):
     def test_overwrite_error_on_connected_argument(self) -> None:
         """An error is raised when trying to connect to a connector with an established connection"""
 
-        input = Input()
-        output = Output()
-        input.connect(output)
+        input_connector = Input()
+        output_connector = Output()
+        input_connector.connect(output_connector)
 
         with self.assertRaises(exceptions.OverwriteConnectionError):
-            self.connector.connect(input)
+            self.connector.connect(input_connector)
 
     def test_connected_instances_share_queue(self) -> None:
         """Test two connected instances share the same memory queue"""
 
-        input = Input()
-        output = Output()
-        input.connect(output)
-        self.assertIs(input._queue, output._queue)
+        input_connector = Input()
+        output_connector = Output()
+        input_connector.connect(output_connector)
+        self.assertIs(input_connector._queue, output_connector._queue)
 
     def test_is_connected_boolean(self) -> None:
         """The ``is_connected`` method returns the current connection state"""
 
-        input = Input()
-        self.assertFalse(input.is_connected())
-        input.connect(Output())
-        self.assertTrue(input.is_connected())
+        input_connector = Input()
+        self.assertFalse(input_connector.is_connected())
+        input_connector.connect(Output())
+        self.assertTrue(input_connector.is_connected())
 
-    def test_error_on_connection_to_input(self) -> None:
+    def test_error_on_connection_to_same_type(self) -> None:
         """An error is raised when connecting two inputs together"""
 
         with self.assertRaises(ValueError):
-            Input().connect(Input())
+            Connector().connect(Connector())
 
-        with self.assertRaises(ValueError):
-            Output().connect(Output())
+
+class PartnerMapping(TestCase):
+    """Test connectors with an established connection correctly map to neighboring connectors/nodes"""
+
+    def setUp(self) -> None:
+        """Create two connected pipeline elements"""
+
+        self.target = MockTarget()
+        self.input_connector = self.target.input
+        self.output_connector = MockSource().output
+        self.output_connector.connect(self.input_connector)
 
     def test_is_aware_of_partner(self) -> None:
+        """Test connectors map to the correct partner connector"""
+
+        self.assertIs(self.input_connector.partner, self.output_connector)
+
+    def test_is_aware_of_parent(self) -> None:
         """Test connectors map to their partner"""
 
-        input = Input()
-        self.assertIsNone(input.partner, 'Default partner is not None')
-
-        output = Output()
-        input.connect(output)
-        self.assertIs(input.partner, output)
+        self.assertIs(self.input_connector.parent_node, self.target)
 
 
 class InstanceDisconnect(TestCase):
@@ -110,6 +119,8 @@ class InputGet(TestCase):
         self.target = MockTarget()
 
     def test_error_on_non_positive_refresh(self) -> None:
+        """Test a ValueError is raised when ``refresh_interval`` is not a positive number"""
+
         with self.assertRaises(ValueError):
             self.target.input.get(timeout=15, refresh_interval=0)
 
