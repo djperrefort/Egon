@@ -4,6 +4,16 @@ from unittest import TestCase
 from . import mock
 
 
+class ProcessAllocation(TestCase):
+    """Test ``Node`` instances fork the correct number of processes"""
+
+    def runTest(self) -> None:
+        num_processes = 4
+        node = mock.MockNode(num_processes)
+        self.assertEqual(num_processes, node.num_processes)
+        self.assertEqual(num_processes, len(node._processes))
+
+
 class Execution(TestCase):
     """Test the execution of tasks assigned to a Node instance"""
 
@@ -25,33 +35,12 @@ class Execution(TestCase):
         self.node.execute()
         self.assertListEqual(self.call_list, expected_order)
 
-    def test_is_finished_on_execute(self) -> None:
+    def test_process_is_finished_on_execute(self) -> None:
         """Test the ``finished`` property is updated after node execution"""
 
-        self.assertFalse(self.node.process_finished)
+        self.assertFalse(self.node.process_finished, 'Default finished state is not False.')
         self.node.execute()
         self.assertTrue(self.node.process_finished)
-
-
-class TestConnectorLists(TestCase):
-    """Test ``Node`` instances are aware of their connectors"""
-
-    def setUp(self) -> None:
-        """Create a ``MockNode`` instance"""
-
-        self.node = mock.MockNode()
-
-    def test_all_inputs_are_listed(self) -> None:
-        """Test all input connectors are included in ``node.get_inputs``"""
-
-        node_inputs = [self.node.input, self.node.second_input]
-        self.assertListEqual(self.node.get_inputs(), node_inputs)
-
-    def test_all_outputs_are_listed(self) -> None:
-        """Test all output connectors are included in ``node._get_outputs``"""
-
-        node_outputs = [self.node.output, self.node.second_output]
-        self.assertListEqual(self.node._get_outputs(), node_outputs)
 
 
 class TreeNavigation(TestCase):
@@ -60,19 +49,19 @@ class TreeNavigation(TestCase):
     def setUp(self) -> None:
         """Create a tree of ``MockNode`` instances"""
 
-        self.root_node = mock.MockSource()
+        self.root = mock.MockSource()
         self.internal_node = mock.MockNode()
-        self.leaf_node = mock.MockTarget()
+        self.leaf = mock.MockTarget()
 
-        self.root_node.output.connect(self.internal_node.input)
-        self.internal_node.output.connect(self.leaf_node.input)
+        self.root.output.connect(self.internal_node.input)
+        self.internal_node.output.connect(self.leaf.input)
 
-    def test_parent_node(self) -> None:
+    def test_upstream_nodes(self) -> None:
         """Test the inline node resolves the correct parent node"""
 
-        self.assertEqual(self.root_node, self.internal_node.upstream_nodes()[0])
+        self.assertEqual(self.root, self.internal_node.upstream_nodes()[0])
 
-    def test_child_node(self) -> None:
+    def test_downstream_nodes(self) -> None:
         """Test the inline node resolves the correct child node"""
 
-        self.assertEqual(self.leaf_node, self.internal_node.downstream_nodes()[0])
+        self.assertEqual(self.leaf, self.internal_node.downstream_nodes()[0])
