@@ -11,28 +11,10 @@ from . import connectors, nodes
 GeneratorFunction = Callable[[], Generator]
 
 
-class Wrapper:
-    """Base class for wrapping functions as node-like pipeline objects"""
-
-    _func: callable
-
-    def __init__(self, func: callable):
-        super().__init__()
-        self._func = func
-
-    def action(self) -> None:
-        while True:
-            data = self.input_data.get()  # Retrieve the data
-            if data is connectors.KillSignal:
-                break
-
-            self.func(*data)
-
-
 def as_source(func: GeneratorFunction) -> nodes.Source:
     """Decorator for wrapping a callable as a pipeline ``Source`` object"""
 
-    class WrappedSource(Wrapper, nodes.Source):
+    class WrappedSource(nodes.Source):
         output = connectors.Output()
 
         @staticmethod
@@ -41,16 +23,16 @@ def as_source(func: GeneratorFunction) -> nodes.Source:
             return func(*args, **kwargs)
 
         def action(self) -> None:
-            for x in self._func():
+            for x in func():
                 self.output.put(x)
 
-    return WrappedSource(func)
+    return WrappedSource()
 
 
 def as_target(func: callable) -> nodes.Target:
     """Decorator for wrapping a callable as a pipeline ``Target`` object"""
 
-    class WrappedTarget(Wrapper, nodes.Target):
+    class WrappedTarget(nodes.Target):
         input = connectors.Input()
 
         @staticmethod
@@ -58,13 +40,21 @@ def as_target(func: callable) -> nodes.Target:
         def __call__(*args, **kwargs) -> Any:
             return func(*args, **kwargs)
 
-    return WrappedTarget(func)
+        def action(self) -> None:
+            while True:
+                data = self.input.get()  # Retrieve the data
+                if data is connectors.KillSignal:
+                    break
+
+                func(*data)
+
+    return WrappedTarget()
 
 
 def as_node(func: callable) -> nodes.Node:
     """Decorator for wrapping a callable as a pipeline ``Node`` object"""
 
-    class WrappedNode(Wrapper, nodes.Node):
+    class WrappedNode(nodes.Node):
         input = connectors.Input()
         output = connectors.Output()
 
@@ -73,4 +63,12 @@ def as_node(func: callable) -> nodes.Node:
         def __call__(*args, **kwargs) -> Any:
             return func(*args, **kwargs)
 
-    return WrappedNode(func)
+        def action(self) -> None:
+            while True:
+                data = self.input.get()  # Retrieve the data
+                if data is connectors.KillSignal:
+                    break
+
+                func(*data)
+
+    return WrappedNode()
