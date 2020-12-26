@@ -26,11 +26,20 @@ class StartStopCommands(TestCase):
         self.assertFalse(pipeline.any_alive())
 
 
-class ProcessCount(TestCase):
-    """Test the pipelines process count matches the sum of processes allocated to each node"""
+class ProcessDiscovery(TestCase):
+    """Test the pipeline is aware of all processes forked by it's nodes"""
 
-    def runTest(self) -> None:
-        """Launch and then kill the process manager"""
+    def test_collected_processes_match_nodes(self) -> None:
+        """Test ``_get_processes`` returns forked processes from all pipeline nodes"""
+
+        pipeline = MockPipeline()
+        expected_processes = []
+        expected_processes.extend(pipeline.root._processes)
+        expected_processes.extend(pipeline.leaf._processes)
+        self.assertCountEqual(expected_processes, pipeline._get_processes())
+
+    def test_process_count(self) -> None:
+        """Test the pipelines process count matches the sum of processes allocated to each node"""
 
         pipeline = MockPipeline()
         expected_count = pipeline.root.num_processes + pipeline.leaf.num_processes
@@ -66,10 +75,10 @@ class PipelineValidation(TestCase):
 
 
 class NodeDiscovery(TestCase):
-    """Test the pipeline is aware of all of its nodes"""
+    """Test the pipeline is aware of all of it's nodes"""
 
     def runTest(self) -> None:
         pipeline = MockPipeline()
         expected_nodes = [pipeline.root, pipeline.leaf]
         recovered_nodes = pipeline.get_nodes()
-        self.assertSequenceEqual(set(expected_nodes), set(recovered_nodes))
+        self.assertCountEqual(expected_nodes, recovered_nodes)

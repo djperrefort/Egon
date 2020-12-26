@@ -22,67 +22,88 @@ def _as_single_arg_func(func: callable) -> callable:
     return lambda args: func(*args)
 
 
+class WrappedSource(nodes.Source):
+
+    def __init__(self, func: GeneratorFunction) -> None:
+        self.output = connectors.Output()
+        self._func = _as_single_arg_func(func)
+        super().__init__()
+
+    def action(self) -> None:
+        """Call the wrapped generator an load results into the ``output`` connector"""
+
+        for x in self._func():
+            self.output.put(x)
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f'<WrappedSource(wrapped_function={self._func.__name__}) object at {hex(id(self))}>'
+
+
+class WrappedTarget(nodes.Target):
+
+    def __init__(self, func: callable) -> None:
+        self.input = connectors.Input()
+        self._func = _as_single_arg_func(func)
+        super().__init__()
+
+    def action(self) -> None:
+        """Call the wrapped function using data from the ``input`` connector"""
+
+        for data in self.input.iter_get():
+            self._func(data)
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f'<WrappedTarget(wrapped_function={self._func.__name__}) object at {hex(id(self))}>'
+
+
+class WrappedNode(nodes.Node):
+    def __init__(self, func: callable) -> None:
+        self.input = connectors.Input()
+        self.output = connectors.Output()
+        self._func = _as_single_arg_func(func)
+        super().__init__()
+
+    def action(self) -> None:
+        """Call the wrapped function and put it's return in the ``output`` connector."""
+
+        for data in self.input.iter_get():
+            self.output.put(self._func(data))
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f'<WrappedNode(wrapped_function={self._func.__name__}) object at {hex(id(self))}>'
+
+
 def as_source(func: GeneratorFunction) -> nodes.Source:
     """Decorator for wrapping a callable as a pipeline ``Source`` object"""
 
-    class WrappedSource(nodes.Source):
-        output = connectors.Output()
-
+    class Wrapper(WrappedSource):
         @staticmethod
         @wraps(func)
         def __call__() -> Any:
             return func()
 
-        def action(self) -> None:
-            for x in func():
-                self.output.put(x)
-
-        def __repr__(self) -> str:  # pragma: no cover
-            return f'<WrappedSource(wrapped_function={func.__name__}) object at {hex(id(self))}>'
-
-    return WrappedSource()
+    return Wrapper(func)
 
 
 def as_target(func: callable) -> nodes.Target:
     """Decorator for wrapping a callable as a pipeline ``Target`` object"""
 
-    class WrappedTarget(nodes.Target):
-        input = connectors.Input()
-
+    class Wrapper(WrappedTarget):
         @staticmethod
         @wraps(func)
         def __call__(*args, **kwargs) -> Any:
             return func(*args, **kwargs)
 
-        def action(self) -> None:
-            single_arg_callable = _as_single_arg_func(func)
-            for data in self.input.iter_get():
-                single_arg_callable(data)
-
-        def __repr__(self) -> str:  # pragma: no cover
-            return f'<WrappedTarget(wrapped_function={func.__name__}) object at {hex(id(self))}>'
-
-    return WrappedTarget()
+    return Wrapper(func)
 
 
 def as_node(func: callable) -> nodes.Node:
     """Decorator for wrapping a callable as a pipeline ``Node`` object"""
 
-    class WrappedNode(nodes.Node):
-        input = connectors.Input()
-        output = connectors.Output()
-
+    class Wrapper(WrappedNode):
         @staticmethod
         @wraps(func)
         def __call__(*args, **kwargs) -> Any:
             return func(*args, **kwargs)
 
-        def action(self) -> None:
-            single_arg_callable = _as_single_arg_func(func)
-            for data in self.input.iter_get():
-                self.output.put(single_arg_callable(data))
-
-        def __repr__(self) -> str:  # pragma: no cover
-            return f'<WrappedNode(wrapped_function={func.__name__}) object at {hex(id(self))}>'
-
-    return WrappedNode()
+    return Wrapper(func)

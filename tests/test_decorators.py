@@ -45,7 +45,7 @@ class BaseTests:
         self.assertEqual(wrapped_sig, original_sig)
 
 
-class SourceWrapper(BaseTests, TestCase):
+class WrappedAsSource(BaseTests, TestCase):
     """Tests for the ``as_source`` decorator"""
 
     wrapper = staticmethod(as_source)
@@ -66,14 +66,14 @@ class SourceWrapper(BaseTests, TestCase):
         self.assertListEqual(list(generator()), list(wrapped()))
 
 
-class InlineWrapper(BaseTests, TestCase):
+class WrappedAsNode(BaseTests, TestCase):
     """Tests for the ``as_node`` decorator"""
 
     wrapper = staticmethod(as_node)
     return_type = Node
 
 
-class TargetWrapper(BaseTests, TestCase):
+class WrappedAsTarget(BaseTests, TestCase):
     """Tests for the ``as_target`` decorator"""
 
     wrapper = staticmethod(as_target)

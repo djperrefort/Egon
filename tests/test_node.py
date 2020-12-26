@@ -36,11 +36,19 @@ class Execution(TestCase):
         self.assertListEqual(self.call_list, expected_order)
 
     def test_process_is_finished_on_execute(self) -> None:
-        """Test the ``finished`` property is updated after node execution"""
+        """Test the ``process_finished`` property is updated after node execution"""
 
         self.assertFalse(self.node.process_finished, 'Default finished state is not False.')
         self.node.execute()
         self.assertTrue(self.node.process_finished)
+
+    def test_node_is_finished_on_execute(self) -> None:
+        """Test the ``node_finished`` property is updated after node execution"""
+
+        self.assertFalse(self.node.node_finished, 'Default finished state is not False.')
+        self.node._processes[0].start()
+        self.node._processes[0].join()
+        self.assertTrue(self.node.node_finished)
 
 
 class TreeNavigation(TestCase):
@@ -65,3 +73,47 @@ class TreeNavigation(TestCase):
         """Test the inline node resolves the correct child node"""
 
         self.assertEqual(self.leaf, self.internal_node.downstream_nodes()[0])
+
+
+class ExpectingData(TestCase):
+    """Tests for the ``expecting_data`` function
+
+    The ``expecting_data`` function combines two booleans.
+    This class evaluates all four suqares of the corresponding truth table
+    """
+
+    def setUp(self) -> None:
+        """Create a tree of ``MockNode`` instances"""
+
+        # Fork zero processes so we can control the node finished state as the state of the daemon process
+        self.root = mock.MockSource(num_processes=0)
+        self.node = mock.MockNode(num_processes=0)
+        self.root.output.connect(self.node.input)
+
+    def test_false_for_empty_queue_and_finished_parent(self) -> None:
+        """Test the return is False for a EMPTY queue and a FINISHED PARENT node"""
+
+        self.root.process_finished = True
+        self.assertFalse(self.node.expecting_data())
+
+    def test_true_if_input_queue_has_data(self) -> None:
+        """Test the return is True for a NOT EMPTY queue and a FINISHED PARENT node"""
+
+        self.root.process_finished = True
+        self.node.input._queue.put(5)
+        self.assertTrue(self.node.expecting_data())
+
+    def test_true_if_parent_is_running(self) -> None:
+        """Test the return is True for a EMPTY queue and a NOT FINISHED PARENT node"""
+
+        self.root.process_finished = False
+        # print(self.root.node_finished)
+        # print(self.node.upstream_nodes()[0].node_finished)
+        self.assertTrue(self.node.expecting_data())
+
+    def test_true_if_input_queue_has_data_and_parent_is_running(self) -> None:
+        """Test the return is True for a NOT EMPTY queue and a NOT FINISHED PARENT node"""
+
+        self.root.process_finished = False
+        self.node.input._queue.put(5)
+        self.assertTrue(self.node.expecting_data())

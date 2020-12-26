@@ -52,6 +52,7 @@ class AbstractNode(abc.ABC):
     def process_finished(self) -> bool:
         """Return whether the current process has finished processing data"""
 
+        # Use get in case called from a process not forked by the class __init__
         return self._states.get(mp.current_process().pid, self._current_process_state)
 
     @process_finished.setter
@@ -132,7 +133,7 @@ class AbstractNode(abc.ABC):
         """Return whether the node is still expecting data from upstream"""
 
         for input_connector in self._get_attrs(connectors.Input):
-            if not (input_connector.empty() and input_connector.parent_node.node_finished):
+            if not (input_connector.empty() and input_connector.partner.parent_node.node_finished):
                 return True
 
         return False
