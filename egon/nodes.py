@@ -34,9 +34,11 @@ class AbstractNode(abc.ABC):
         """Represents a single pipeline node"""
 
         self._processes = [mp.Process(target=self.execute) for _ in range(num_processes)]
-        self._states = mp.Manager().dict({p.pid: False for p in self._processes})
-        self._current_process_state = False
 
+        # Note that we use the memory address and not the ``pid`` attribute.
+        # ``pid`` is only set after the process is started
+        self._states = mp.Manager().dict({id(p): False for p in self._processes})
+        self._current_process_state = False
         for connection in self._get_attrs(connectors.Connector):
             connection._node = self
 
@@ -55,7 +57,7 @@ class AbstractNode(abc.ABC):
 
     @process_finished.setter
     def process_finished(self, state: bool) -> None:
-        self._states[mp.current_process().pid] = self._current_process_state = state
+        self._states[id(mp.current_process())] = self._current_process_state = state
 
     @property
     def node_finished(self) -> bool:

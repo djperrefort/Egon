@@ -42,6 +42,14 @@ class Execution(TestCase):
         self.node.execute()
         self.assertTrue(self.node.process_finished)
 
+    def test_node_is_finished_on_execute(self) -> None:
+        """Test the ``node_finished`` property is updated after node execution"""
+
+        self.assertFalse(self.node.node_finished, 'Default finished state is not False.')
+        self.node._processes[0].start()
+        self.node._processes[0].join()
+        self.assertTrue(self.node.node_finished)
+
 
 class TreeNavigation(TestCase):
     """Test ``Node`` instances are aware of their neighbors"""
@@ -99,8 +107,6 @@ class ExpectingData(TestCase):
         """Test the return is True for a EMPTY queue and a NOT FINISHED PARENT node"""
 
         self.root.process_finished = False
-        # print(self.root.node_finished)
-        # print(self.node.upstream_nodes()[0].node_finished)
         self.assertTrue(self.node.expecting_data())
 
     def test_true_if_input_queue_has_data_and_parent_is_running(self) -> None:
