@@ -3,24 +3,6 @@ between nodes. Each connector instance is assigned to a single node and can be
 used to send or receive data depending on the type of connector.
 ``Output`` connectors are used to send data where as ``Input`` objects are
 used to receive.
-
-.. doctest:: python
-
-   >>> from egon.connectors import Input, Output
-   >>> from egon.nodes import Node
-
-   >>> class Foo(Node):
-   ...     input_data = Input()
-   ...     output_data = Output()
-   ...
-   ...     def action(self):
-   ...         while True:
-   ...             data = self.input_data.get() # Retrieve the data
-   ...             if data is KillSignal:
-   ...                 break
-   ...
-   ...             # Apply some analysis procedure here
-   ...             self.output_data.put(data)  # Pass the data on to the next node
 """
 
 from __future__ import annotations
