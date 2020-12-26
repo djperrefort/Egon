@@ -121,7 +121,7 @@ class Connector(DataStore):
 class Input(Connector):
     """Handles the input of data into a pipeline node"""
 
-    def get(self, timeout: Optional[int] = None, refresh_interval: int = 10):
+    def get(self, timeout: Optional[int] = None, refresh_interval: int = 2):
         """Blocking call to retrieve input data
 
         Releases automatically when no more data is coming from upstream
@@ -158,8 +158,8 @@ class Input(Connector):
 
         while self.parent_node.expecting_data():
             data = self.get()
-            if data is KillSignal:  # Test to make sure get never returns None
-                raise StopIteration()
+            if data is KillSignal:
+                return
 
             yield data
 
