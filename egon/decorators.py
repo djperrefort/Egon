@@ -2,6 +2,7 @@
 creating pipeline nodes from pre-built functions.
 """
 
+import inspect
 from typing import Any, Callable, Generator
 
 from boltons.funcutils import wraps
@@ -9,6 +10,15 @@ from boltons.funcutils import wraps
 from . import connectors, nodes
 
 GeneratorFunction = Callable[[], Generator]
+
+
+def _as_single_arg_func(func):
+    """Return a function as a callable that accepts at most one argument"""
+
+    if len(inspect.getfullargspec(func).args) <= 1:
+        return func
+
+    return lambda args: func(*args)
 
 
 def as_source(func: GeneratorFunction) -> nodes.Source:
@@ -41,12 +51,9 @@ def as_target(func: callable) -> nodes.Target:
             return func(*args, **kwargs)
 
         def action(self) -> None:
-            while True:
-                data = self.input.get()  # Retrieve the data
-                if data is connectors.KillSignal:
-                    break
-
-                func(*data)
+            single_arg_callable = _as_single_arg_func(func)
+            for data in self.input.iter_get():
+                single_arg_callable(data)
 
     return WrappedTarget()
 
@@ -64,11 +71,8 @@ def as_node(func: callable) -> nodes.Node:
             return func(*args, **kwargs)
 
         def action(self) -> None:
-            while True:
-                data = self.input.get()  # Retrieve the data
-                if data is connectors.KillSignal:
-                    break
-
-                func(*data)
+            single_arg_callable = _as_single_arg_func(func)
+            for data in self.input.iter_get():
+                single_arg_callable(data)
 
     return WrappedNode()
