@@ -114,7 +114,7 @@ class Connector(DataStore):
 
         return self._node
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return f'<egon.connectors.Input(name={self.name}) object at {hex(id(self))}>'
 
 

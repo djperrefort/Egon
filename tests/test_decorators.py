@@ -1,6 +1,6 @@
 import inspect
 from typing import Type
-from unittest import TestCase
+from unittest import TestCase, skip
 
 from egon.decorators import as_node, as_source, as_target
 from egon.nodes import Node, Source, Target
@@ -50,6 +50,20 @@ class SourceWrapper(BaseTests, TestCase):
 
     wrapper = staticmethod(as_source)
     return_type = Source
+
+    @skip
+    def test_wrapped_is_still_callable(self) -> None:
+        """Test wrapped functions are still callable"""
+
+    def test_wrapped_is_still_generator(self) -> None:
+        """Test the wrapped function still acts as a generator"""
+
+        def generator():
+            for i in range(10):
+                yield i
+
+        wrapped = self.wrapper(generator)
+        self.assertListEqual(list(generator()), list(wrapped()))
 
 
 class InlineWrapper(BaseTests, TestCase):

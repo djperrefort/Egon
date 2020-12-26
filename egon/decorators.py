@@ -37,7 +37,7 @@ def as_source(func: GeneratorFunction) -> nodes.Source:
             for x in func():
                 self.output.put(x)
 
-        def __repr__(self) -> str:
+        def __repr__(self) -> str:  # pragma: no cover
             return f'<WrappedSource(wrapped_function={func.__name__}) object at {hex(id(self))}>'
 
     return WrappedSource()
@@ -59,7 +59,7 @@ def as_target(func: callable) -> nodes.Target:
             for data in self.input.iter_get():
                 single_arg_callable(data)
 
-        def __repr__(self) -> str:
+        def __repr__(self) -> str:  # pragma: no cover
             return f'<WrappedTarget(wrapped_function={func.__name__}) object at {hex(id(self))}>'
 
     return WrappedTarget()
@@ -82,7 +82,7 @@ def as_node(func: callable) -> nodes.Node:
             for data in self.input.iter_get():
                 self.output.put(single_arg_callable(data))
 
-        def __repr__(self) -> str:
+        def __repr__(self) -> str:  # pragma: no cover
             return f'<WrappedNode(wrapped_function={func.__name__}) object at {hex(id(self))}>'
 
     return WrappedNode()
