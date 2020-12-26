@@ -52,10 +52,15 @@ class DataStore:
 class Connector(DataStore):
     """Base class for signal/slot-like connector objects"""
 
-    def __init__(self) -> None:
-        """Handles the communication of input/output data between pipeline nodes"""
+    def __init__(self, name: str = None) -> None:
+        """Handles the communication of input/output data between pipeline nodes
+
+        Args:
+            name: Human readable name for the connector. Used in error and status messages.
+        """
 
         super().__init__()
+        self.name = name
         self._node: Optional[AbstractNode] = None  # The node that this connector is assigned to
         self._connected_partner: Optional[Connector] = None  # The connector object of another node
 
@@ -108,6 +113,9 @@ class Connector(DataStore):
         """The parent node this connector is assigned to"""
 
         return self._node
+
+    def __repr__(self) -> str:
+        return f'<egon.connectors.Input(name={self.name}) object at {hex(id(self))}>'
 
 
 class Input(Connector):
