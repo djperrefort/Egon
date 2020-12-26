@@ -1,4 +1,4 @@
-"""Egon is a lightweight framework for the development parallelized data
+"""Egon is a lightweight framework for the development of parallelized data
 analysis pipelines.
 """
 
