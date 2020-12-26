@@ -10,7 +10,7 @@ class InputGet(TestCase):
     def setUp(self) -> None:
         """Define a node with an attached ``Input`` instance"""
 
-        self.target = MockTarget()
+        self.target = MockTarget(num_processes=0)  # Run node in current process only
 
     def test_error_on_non_positive_refresh(self) -> None:
         """Test a ValueError is raised when ``refresh_interval`` is not a positive number"""
@@ -34,7 +34,6 @@ class InputGet(TestCase):
         source = MockSource(num_processes=0)
         source.output.connect(self.target.input)
         source.process_finished = True
-        self.assertEqual(self.target.upstream_nodes()[0].node_finished, True)
         self.assertIs(self.target.input.get(timeout=15), KillSignal)
 
     def test_timeout_raises_timeout_error(self) -> None:

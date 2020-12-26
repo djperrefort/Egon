@@ -42,14 +42,6 @@ class Execution(TestCase):
         self.node.execute()
         self.assertTrue(self.node.process_finished)
 
-    def test_node_is_finished_on_execute(self) -> None:
-        """Test the ``node_finished`` property is updated after node execution"""
-
-        self.assertFalse(self.node.node_finished, 'Default finished state is not False.')
-        self.node._processes[0].start()
-        self.node._processes[0].join()
-        self.assertTrue(self.node.node_finished)
-
 
 class TreeNavigation(TestCase):
     """Test ``Node`` instances are aware of their neighbors"""
