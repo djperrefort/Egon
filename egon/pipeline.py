@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from asyncio.subprocess import Process
 from inspect import getmembers
+from typing import List
 
 from . import nodes
+from .nodes import Node
 
 
 class Pipeline:
@@ -11,18 +14,25 @@ class Pipeline:
     nodes: list
     _processes: list
 
-    def setup_pipeline(self) -> None:
+    def validate(self) -> None:
         """Set up the pipeline and instantiate child _processes"""
 
         # Make sure the nodes are in a runnable condition before we start spawning _processes
-        self.nodes = [getattr(self, a[0]) for a in getmembers(self, lambda a: isinstance(a, nodes.AbstractNode))]
         for node in self.nodes:
             node.validate_connections()
 
+    def _get_processes(self) -> List[Process]:
+
         # Collect all of the processes assigned to each node
-        self._processes = []
+        processes = []
         for node in self.nodes:
-            self._processes.extend(node._processes)
+            processes.extend(node._processes)
+
+        return processes
+
+    @property
+    def nodes(self) -> List[Node]:
+        return [getattr(self, a[0]) for a in getmembers(self, lambda a: isinstance(a, nodes.AbstractNode))]
 
     @property
     def num_processes(self) -> int:

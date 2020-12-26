@@ -82,7 +82,7 @@ class AbstractNode(abc.ABC):
         for conn in self._get_attrs(connectors.Connector):
             if not conn.is_connected():
                 raise exceptions.MissingConnectionError(
-                    f'Connector {conn} does not have an established connection (Node: {conn.node})')
+                    f'Connector {conn} does not have an established connection (Node: {conn.parent_node})')
 
     def _get_attrs(self, attr_type=None) -> List:
         """Return a list of instance attributes matching the given type
