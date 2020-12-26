@@ -1,5 +1,5 @@
 """Tests for connector objects defined in the ``connectors`` module"""
-from asyncio import sleep
+
 from unittest import TestCase
 
 from egon import exceptions
@@ -103,7 +103,8 @@ class InstanceDisconnect(TestCase):
         self.assertFalse(self.input.is_connected())
         self.assertFalse(self.output.is_connected())
 
-    def test_no_error_on_successive_disconnect(self) -> None:
+    @staticmethod
+    def test_no_error_on_successive_disconnect() -> None:
         """Test no errors are raised when disconnecting an instance with no connection"""
 
         Input().disconnect()

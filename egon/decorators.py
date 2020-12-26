@@ -12,7 +12,7 @@ from . import connectors, nodes
 GeneratorFunction = Callable[[], Generator]
 
 
-def _as_single_arg_func(func):
+def _as_single_arg_func(func: callable) -> callable:
     """Return a function as a callable that accepts at most one argument"""
 
     if len(inspect.getfullargspec(func).args) <= 1:
@@ -29,8 +29,8 @@ def as_source(func: GeneratorFunction) -> nodes.Source:
 
         @staticmethod
         @wraps(func)
-        def __call__(*args, **kwargs) -> Any:
-            return func(*args, **kwargs)
+        def __call__() -> Any:
+            return func()
 
         def action(self) -> None:
             for x in func():

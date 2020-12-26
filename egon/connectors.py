@@ -14,7 +14,7 @@ from typing import Any, Optional, TYPE_CHECKING
 from . import exceptions
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .nodes import Node, AbstractNode
+    from .nodes import AbstractNode
 
 
 class KillSignal:
