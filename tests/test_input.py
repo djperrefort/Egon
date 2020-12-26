@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from egon.connectors import KillSignal
-from tests.mock import MockTarget
+from tests.mock import MockTarget, MockSource
 
 
 class InputGet(TestCase):
@@ -31,8 +31,10 @@ class InputGet(TestCase):
     def test_kill_signal_on_finished_parent_node(self) -> None:
         """Test a kill signal is returned if the parent node if finished"""
 
-        self.target.execute()
-        self.assertTrue(self.target.node_finished)
+        source = MockSource(num_processes=0)
+        source.output.connect(self.target.input)
+        source.process_finished = True
+        self.assertEqual(self.target.upstream_nodes()[0].node_finished, True)
         self.assertIs(self.target.input.get(timeout=15), KillSignal)
 
     def test_timeout_raises_timeout_error(self) -> None:

@@ -18,13 +18,13 @@ class BaseTests:
             def action(self) -> None:
                 pass
 
-        self.test_class = TestSource
+        self.test_class = TestSource()
 
     def test_error_if_orphaned(self) -> None:
         """Test ``OrphanedNodeError`` is raised for a Node with no connectors"""
 
         with self.assertRaises(exceptions.OrphanedNodeError):
-            self.test_class()
+            self.test_class.validate()
 
     def test_error_if_malformed(self) -> None:
         """Test a malformed error is raised"""
@@ -32,7 +32,7 @@ class BaseTests:
         self.test_class.input = Input()
         self.test_class.output = Output()
         with self.assertRaises(self.malformed_exception):
-            self.test_class()
+            self.test_class.validate()
 
 
 class SourceValidation(BaseTests, TestCase):

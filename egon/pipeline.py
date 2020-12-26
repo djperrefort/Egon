@@ -16,7 +16,7 @@ class Pipeline:
 
         # Make sure the nodes are in a runnable condition before we start spawning _processes
         for node in self.get_nodes():
-            node.validate_connections()
+            node.validate()
 
     def _get_processes(self) -> List[Process]:
         """Return a list of all processes forked by pipeline nodes"""

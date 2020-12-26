@@ -40,8 +40,6 @@ class AbstractNode(abc.ABC):
         for connection in self._get_attrs(connectors.Connector):
             connection._node = self
 
-        self._validate_init()
-
     @property
     def num_processes(self) -> int:
         """The number of processes assigned to the current node"""
@@ -66,14 +64,14 @@ class AbstractNode(abc.ABC):
         return all(self._states.values())
 
     @abc.abstractmethod
-    def _validate_init(self) -> None:
+    def validate(self) -> None:
         """Raise exception if the object is not a valid instance
 
         Raises:
             ValueError: For an invalid instance construction
         """
 
-    def validate_connections(self) -> None:
+    def _validate_connections(self) -> None:
         """Raise exception if any of the node's Inputs/Outputs are missing connections
 
         Raises:
@@ -142,7 +140,7 @@ class AbstractNode(abc.ABC):
 class Source(AbstractNode, ABC):
     """A pipeline process that only has output streams"""
 
-    def _validate_init(self) -> None:
+    def validate(self) -> None:
         """Raise exception if the object is not a valid instance
 
         Raises:
@@ -156,11 +154,13 @@ class Source(AbstractNode, ABC):
         if not self._get_attrs(connectors.Output):
             raise exceptions.OrphanedNodeError('Source has no output connectors and is inaccessible by the pipeline.')
 
+        self._validate_connections()
+
 
 class Target(AbstractNode, ABC):
     """A pipeline process that only has input streams"""
 
-    def _validate_init(self) -> None:
+    def validate(self) -> None:
         """Raise exception if the object is not a valid instance
 
         Raises:
@@ -174,11 +174,13 @@ class Target(AbstractNode, ABC):
         if not self._get_attrs(connectors.Input):
             raise exceptions.OrphanedNodeError('Target has no input connectors and is inaccessible by the pipeline.')
 
+        self._validate_connections()
+
 
 class Node(Target, Source, ABC):
     """A pipeline process that can have any number of input or output streams"""
 
-    def _validate_init(self) -> None:
+    def validate(self) -> None:
         """Raise exception if the object is not a valid instance
 
         Raises:
@@ -187,3 +189,5 @@ class Node(Target, Source, ABC):
 
         if not self._get_attrs(connectors.Connector):
             raise exceptions.OrphanedNodeError('Node has no associated connectors and is inaccessible by the pipeline.')
+
+        self._validate_connections()

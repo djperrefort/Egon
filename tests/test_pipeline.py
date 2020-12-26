@@ -5,6 +5,7 @@ from unittest import TestCase
 
 from egon.connectors import Output
 from egon.exceptions import OrphanedNodeError, MissingConnectionError
+from egon.nodes import Node
 from egon.pipeline import Pipeline
 from tests.mock import MockSource, MockNode, MockPipeline
 
@@ -52,10 +53,14 @@ class PipelineValidation(TestCase):
     def test_orphaned_node(self) -> None:
         """Test a ``OrphanedNodeError`` for an unreachable node"""
 
+        class OrphanedNode(Node):
+            def action(self) -> None:
+                pass
+
         class Pipe(Pipeline):
 
             def __init__(self) -> None:
-                self.node = MockNode()
+                self.node = OrphanedNode()
 
         with self.assertRaises(OrphanedNodeError):
             Pipe().validate()
