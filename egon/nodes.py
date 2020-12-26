@@ -96,18 +96,10 @@ class AbstractNode(abc.ABC):
 
         return [getattr(self, a[0]) for a in inspect.getmembers(self, lambda a: isinstance(a, attr_type))]
 
-    def _get_inputs(self) -> List[connectors.Input]:
-        """Returns a list of input connections assigned to the current _node
-
-        Returns:
-            A list of ``Input`` connection objects
-        """
-        return self._get_attrs(connectors.Input)
-
     def upstream_nodes(self) -> List[Union[Source, Node]]:
         """Returns a list of nodes that are upstream from the current node"""
 
-        return _get_nodes_from_connectors(self._get_inputs())
+        return _get_nodes_from_connectors(self._get_attrs(connectors.Input))
 
     def downstream_nodes(self) -> List[Union[Node, Target]]:
         """Returns a list of nodes that are downstream from the current node"""
@@ -135,6 +127,15 @@ class AbstractNode(abc.ABC):
         self.action()
         self.teardown()
         self.process_finished = True
+
+    def expecting_data(self) -> bool:
+        """Return whether the node is still expecting data from upstream"""
+
+        for input_connector in self._get_attrs(connectors.Input):
+            if not (input_connector.empty() and input_connector.parent_node.node_finished):
+                return True
+
+        return False
 
 
 class Source(AbstractNode, ABC):
