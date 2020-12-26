@@ -26,6 +26,7 @@ used to receive.
 from __future__ import annotations
 
 import multiprocessing as mp
+from queue import Empty
 from typing import Any, Optional, TYPE_CHECKING
 
 from . import exceptions
@@ -154,10 +155,23 @@ class Input(Connector):
             try:
                 return self._queue.get(timeout=min(timeout, refresh_interval))
 
-            except TimeoutError:
+            except (Empty, TimeoutError):
                 timeout -= refresh_interval
 
         raise TimeoutError
+
+    def iter_get(self) -> Any:
+        """Iterator that returns input data
+
+        Automatically exits once no more data is expected from upstream nodes.
+        """
+
+        while self.parent_node.expecting_data():
+            data = self.get()
+            if data is KillSignal:  # Test to make sure get never returns None
+                raise StopIteration()
+
+            yield data
 
 
 class Output(Connector):
