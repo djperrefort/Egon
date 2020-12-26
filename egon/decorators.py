@@ -1,5 +1,6 @@
 """Function decorators from the ``decorators`` module provide a shorthand for
-creating pipeline nodes from pre-built functions.
+creating pipeline nodes from pre-built functions. Different decorators
+produce different kinds of pipeline nodes
 """
 
 import inspect
@@ -36,6 +37,9 @@ def as_source(func: GeneratorFunction) -> nodes.Source:
             for x in func():
                 self.output.put(x)
 
+        def __repr__(self) -> str:
+            return f'<WrappedSource(wrapped_function={func.__name__}) object at {hex(id(self))}>'
+
     return WrappedSource()
 
 
@@ -55,6 +59,9 @@ def as_target(func: callable) -> nodes.Target:
             for data in self.input.iter_get():
                 single_arg_callable(data)
 
+        def __repr__(self) -> str:
+            return f'<WrappedTarget(wrapped_function={func.__name__}) object at {hex(id(self))}>'
+
     return WrappedTarget()
 
 
@@ -73,6 +80,9 @@ def as_node(func: callable) -> nodes.Node:
         def action(self) -> None:
             single_arg_callable = _as_single_arg_func(func)
             for data in self.input.iter_get():
-                single_arg_callable(data)
+                self.output.put(single_arg_callable(data))
+
+        def __repr__(self) -> str:
+            return f'<WrappedNode(wrapped_function={func.__name__}) object at {hex(id(self))}>'
 
     return WrappedNode()
