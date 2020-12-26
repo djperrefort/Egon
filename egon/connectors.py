@@ -1,8 +1,8 @@
 """``Connector`` objects are responsible for the communication of information
 between nodes. Each connector instance is assigned to a single node and can be
 used to send or receive data depending on the type of connector.
-``Output`` connectors are used to send data where as ``Input`` objects are
-used to receive.
+``Output`` connectors are used to send data and ``Input`` objects are
+used to receive data.
 """
 
 from __future__ import annotations

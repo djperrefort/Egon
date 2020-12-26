@@ -1,3 +1,8 @@
+"""The ``nodes`` module supports the construction of individual pipeline nodes.
+``Source``, ``Node``,  and ``Target`` classes are provided for creating nodes
+that produce, analyze, and costume data respectively.
+"""
+
 from __future__ import annotations
 
 import abc
@@ -10,13 +15,13 @@ from . import connectors, exceptions
 
 
 def _get_nodes_from_connectors(connector_list: Collection[connectors.Connector]) -> List:
-    """Return the parent nodes from a list of Connector objects
+    """Return the parent nodes from a list of ``Connector`` objects
     
     Args:
         connector_list: The connectors to get parents of
         
     Returns:
-        A list of ``AbstractNode`` instances
+        A list of node instances
     """
 
     nodes = []
@@ -61,20 +66,20 @@ class AbstractNode(abc.ABC):
 
     @property
     def node_finished(self) -> bool:
-        """Return whether the all node _processes have finished processing data"""
+        """Return whether all node processes have finished processing data"""
 
         return all(self._states.values())
 
     @abc.abstractmethod
     def validate(self) -> None:
-        """Raise exception if the object is not a valid instance
+        """Raise an exception if the node object was constructed improperly
 
         Raises:
             ValueError: For an invalid instance construction
         """
 
     def _validate_connections(self) -> None:
-        """Raise exception if any of the node's Inputs/Outputs are missing connections
+        """Raise an exception if any of the node's Inputs/Outputs are missing connections
 
         Raises:
             MissingConnectionError: For an invalid instance construction
@@ -112,7 +117,7 @@ class AbstractNode(abc.ABC):
 
     @abc.abstractmethod
     def action(self) -> None:
-        """The analysis task performed by the parent pipeline process"""
+        """The primary analysis task performed by this node"""
 
     def teardown(self) -> None:
         """Teardown tasks called after running ``action``"""
@@ -121,7 +126,6 @@ class AbstractNode(abc.ABC):
         """Execute the pipeline node
 
         Execution includes all ``setup``, ``action``, and ``teardown`` tasks.
-        Once execution is, the ``finished`` attribute is set to ``True``
         """
 
         self.setup()

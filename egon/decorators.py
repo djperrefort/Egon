@@ -1,6 +1,6 @@
 """Function decorators from the ``decorators`` module provide a shorthand for
 creating pipeline nodes from pre-built functions. Different decorators
-produce different kinds of pipeline nodes
+produce different kinds of pipeline nodes.
 """
 
 import inspect
@@ -14,7 +14,14 @@ GeneratorFunction = Callable[[], Generator]
 
 
 def _as_single_arg_func(func: callable) -> callable:
-    """Return a function as a callable that accepts at most one argument"""
+    """Wrap a callable so that it accepts at most one argument
+
+    Args:
+        func: The callable to wrap
+
+    Returns:
+        The wrapped function
+    """
 
     if len(inspect.getfullargspec(func).args) <= 1:
         return func
@@ -23,6 +30,7 @@ def _as_single_arg_func(func: callable) -> callable:
 
 
 class WrappedSource(nodes.Source):
+    """Wrapped callable as a Source-like object"""
 
     def __init__(self, func: GeneratorFunction) -> None:
         self.output = connectors.Output()
@@ -30,7 +38,7 @@ class WrappedSource(nodes.Source):
         super().__init__()
 
     def action(self) -> None:
-        """Call the wrapped generator an load results into the ``output`` connector"""
+        """Call the wrapped generator and load results into the ``output`` connector"""
 
         for x in self._func():
             self.output.put(x)
@@ -40,6 +48,7 @@ class WrappedSource(nodes.Source):
 
 
 class WrappedTarget(nodes.Target):
+    """Wrapped callable as a Target-like object"""
 
     def __init__(self, func: callable) -> None:
         self.input = connectors.Input()
@@ -57,6 +66,8 @@ class WrappedTarget(nodes.Target):
 
 
 class WrappedNode(nodes.Node):
+    """Wrapped callable as a Node-like object"""
+
     def __init__(self, func: callable) -> None:
         self.input = connectors.Input()
         self.output = connectors.Output()
