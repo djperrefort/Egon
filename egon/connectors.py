@@ -139,7 +139,7 @@ class Input(Connector):
 
         timeout = timeout or float('inf')
         while timeout > 0:
-            if self.is_connected() and self.partner.parent_node.node_finished:
+            if self.is_connected() and not self.parent_node.expecting_data():
                 return KillSignal
 
             try:

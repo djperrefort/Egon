@@ -34,6 +34,7 @@ class InputGet(TestCase):
         source = MockSource(num_processes=0)
         source.output.connect(self.target.input)
         source.process_finished = True
+        self.assertFalse(self.target.expecting_data())
         self.assertIs(self.target.input.get(timeout=15), KillSignal)
 
     def test_timeout_raises_timeout_error(self) -> None:
