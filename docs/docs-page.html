@@ -178,7 +178,7 @@ class Extract(Source):
     # Here we define an output connector for the class
     # This allows the node to send data further down the pipeline
     # For more complicated nodes, you can define as many connectors as needed.
-    data_out = Output()
+    data_output = Output()
 
     def setup(self):
         """Setup tasks are optional and can be used to configure a pipeline node"""
@@ -229,15 +229,18 @@ class Load(Target):
                             <code>iter_get</code> is smart enough to automatically exit once there are no longer any upstream processes left to feed it data.
                         </p>
                         <pre class="shadow-lg rounded"><code class="python">
-class Load(Target):
+from egon.connectors import Input
+from egon.nodes import Target
 
+
+class Load(Target):
     data_input = Input()
 
     def action(self):
         """Load data into a directory"""
 
         for data in self.data_input.iter_get():
-            ... # Logic to insert data into a target database goes here
+            ...  # Logic to insert data into a target database goes here
                         </code></pre>
 
                     </section><!--//section-->
@@ -254,6 +257,7 @@ class Load(Target):
                         <pre class="shadow-lg rounded"><code class="python">
 from egon.connectors import Input, Output
 from egon.nodes import Node
+
 
 class Transform(Node):
 
@@ -337,18 +341,18 @@ from egon.pipeline import Pipeline
 
 
 @as_source
-def generate_numbers() -> Iterable:
+def generate_numbers():
     for i in range(100):
         yield i, i + 1
 
 
 @as_node
-def add(x: int, y: int) -> int:
+def add(x, y):
     return x + y
 
 
 @as_target
-def print_sum(x: int) -> None:
+def print_sum(x):
     print(x)
 
 
@@ -367,7 +371,7 @@ class AddingPipeline(Pipeline):
 
 pipeline = AddingPipeline()
 pipeline.validate()
-pipeline().run()
+pipeline.run()
 						    </code></pre>
                         </section><!--//docs-intro-->
                     </header><!--//docs-header-->
@@ -408,7 +412,17 @@ pipeline().run()
                                 The error will indicate both the problem and problematic connector.
                             </p>
                             <pre class="shadow-lg rounded"><code class="python">
+from egon.decorators import as_source
 
+
+@as_source
+def generate_numbers():
+    for i in range(100):
+        yield i, i + 1
+
+generate_numbers.validate()
+
+# egon.exceptions.MissingConnectionError: Connector &lt;egon.connectors.Input(name=None) object at 0x7f408d078eb0> does not have an established connection (Node: &lt;WrappedSource(wrapped_function=generate_numbers) object at 0x7f408d078d90>)
 						    </code></pre>
                             <p>
                                 Individual node validation is a useful step to incorporate into a project test suite.
@@ -437,7 +451,13 @@ my_pipeline.run()
                                 To prevent against circular data flow, input connectors can only ever connect to output connectors (and visa/versa).
                             </p>
                             <pre class="shadow-lg rounded"><code class="python">
+from egon.connectors import Input
 
+input_1 = Input()
+input_2 = Input()
+input_1.connect(input_2)
+
+# Raises: ValueError: Cannot join together two connection objects of the same type.
 						    </code></pre>
                         </section><!--//docs-intro-->
                     </header><!--//docs-header-->
