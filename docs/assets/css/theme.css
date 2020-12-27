@@ -7807,6 +7807,19 @@ a.text-dark:hover, a.text-dark:focus {
 /* ============= Theme Mixins ============= */
 /* ============= Base ============= */
 /*********** Theme Generic **********/
+img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 80%; }
+
+img.logo-icon {
+  width: 40px;
+  height: 40px;
+  display: unset;
+  margin-left: unset;
+  margin-right: unset; }
+
 body {
   font-family: 'Poppins', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -7818,6 +7831,9 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Poppins', sans-serif;
   color: #252930;
   font-weight: 600; }
+
+h5 {
+  padding-top: 20px; }
 
 code {
   background: #f4fcf6;

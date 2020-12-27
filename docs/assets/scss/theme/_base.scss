@@ -1,6 +1,22 @@
 /* ============= Base ============= */
 
 /*********** Theme Generic **********/
+
+img {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	width: 80%;
+}
+
+img.logo-icon {
+	width: 40px;
+	height: 40px;
+	display: unset;
+	margin-left: unset;
+	margin-right: unset;
+}
+
 body {
     font-family: 'Poppins', sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -13,6 +29,10 @@ h1, h2, h3, h4, h5, h6 {
 	font-family: 'Poppins', sans-serif;
 	color: $theme-text-color-primary;
 	font-weight: 600;
+}
+
+h5 {
+	padding-top: 20px;
 }
 
 code {
@@ -126,7 +146,7 @@ a.theme-link {
 	font-size: 1rem;
 	text-align: center;
 	@include border-radius(50%);
-	
+
 	.svg-inline---fa {
 		color: $theme-color-primary;
 	}
@@ -159,7 +179,7 @@ a.theme-link {
 	    @include skew(25,-10);
         @include transform-origin(top left);
 	}
-	
+
 	&:after {
 		content: "";
 		width: 150px;
@@ -193,7 +213,7 @@ a.theme-link {
 	    @include skew(25,-12);
         @include transform-origin(top left);
 	}
-	
+
 	&:after {
 		content: "";
 		width: 150px;
@@ -235,7 +255,7 @@ a.theme-link {
 	    font-size: 1.5rem;
 	    font-weight:bold;
     }
-    
+
     .text-alt {
 	    font-weight:300;
     }
@@ -277,7 +297,7 @@ a.theme-link {
 				color: $theme-color-primary;
 			}
 		}
-		
+
 		&:not(:last-child) {
 			margin-right: 0.875rem;
 		}
@@ -295,8 +315,8 @@ a.theme-link {
 	.copyright {
 		font-size: 0.875rem;
 	}
-	
-	
+
+
 }
 
 /* Page related */
