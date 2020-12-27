@@ -500,7 +500,9 @@ input_1.connect(input_2)
                             </p>
                             <h5><i class="fas fa-question-circle"></i> Can I dynamically change the number of allocated processes during runtime?</h5>
                             <p>
-                                No. The number of processes assigned to a given pipeline node is fixed once the node is instantiated.
+                                The number of processes assigned to a given node can be changed at any point after instantiation.
+                                However, the number of processes cannot be changed while the node is running.
+                                If any of the forked processes assigned to a node are currently running, you must wait for them to exit.
                             </p>
                             <h5><i class="fas fa-question-circle"></i> Help, my pipeline wont exit!</h5>
                             <p>
