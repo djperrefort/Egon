@@ -7,11 +7,29 @@ from . import mock
 class ProcessAllocation(TestCase):
     """Test ``Node`` instances fork the correct number of processes"""
 
-    def runTest(self) -> None:
+    def test_allocation_at_init(self) -> None:
+        """Test the correct number of processes are allocated at init"""
+
         num_processes = 4
         node = mock.MockNode(num_processes)
         self.assertEqual(num_processes, node.num_processes)
         self.assertEqual(num_processes, len(node._processes))
+
+    def test_reallocation(self) -> None:
+        """Test a new set of processes are allocated when the number of processes is changed"""
+
+        num_processes = 4
+        node = mock.MockNode(num_processes=1)
+        node.num_processes = 4
+        self.assertEqual(num_processes, node.num_processes)
+
+    def test_error_if_processes_are_alive(self) -> None:
+        """Test a RuntimeError is raised when trying to realocate processes on a running node"""
+
+        node = mock.MockNode()
+        node._processes[0].start()
+        with self.assertRaises(RuntimeError):
+            node.num_processes = 1
 
 
 class Execution(TestCase):

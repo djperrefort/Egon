@@ -10,7 +10,7 @@ class MockSource(nodes.Source):
 
     def __init__(self, num_processes=1) -> None:
         self.output = Output()
-        super().__init__(num_processes)
+        super(MockSource, self).__init__(num_processes)
 
     def action(self) -> None:
         """Placeholder function to satisfy requirements of abstract parent"""
@@ -23,7 +23,7 @@ class MockTarget(nodes.Target):
 
     def __init__(self, num_processes=1) -> None:
         self.input = Input()
-        super().__init__(num_processes)
+        super(MockTarget, self).__init__(num_processes)
 
     def action(self) -> None:
         """Placeholder function to satisfy requirements of abstract parent"""
@@ -37,7 +37,7 @@ class MockNode(nodes.Node):
     def __init__(self, num_processes=1) -> None:
         self.output = Output()
         self.input = Input()
-        super().__init__(num_processes)
+        super(MockNode, self).__init__(num_processes)
 
     def action(self) -> None:
         """Placeholder function to satisfy requirements of abstract parent"""
