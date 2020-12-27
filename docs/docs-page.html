@@ -82,6 +82,8 @@
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-pipeline-validation">Pipeline Validation</a></li>
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-connector-errors">Connector Errors</a></li>
                     <li class="nav-item section-title"><a class="nav-link scrollto active" href="#section-FAQ"><span class="theme-icon-holder mr-2"><i class="fas fa-question-circle"></i></span>Faq</a></li>
+                    <li class="nav-item"><a class="nav-link scrollto" href="#item-general-questions">General Qustions</a></li>
+                    <li class="nav-item"><a class="nav-link scrollto" href="#item-parallel-processing">Parallel Processing</a></li>
                 </ul>
             </nav><!--//docs-nav-->
 
@@ -369,12 +371,12 @@ class AddingPipeline(Pipeline):
 
     def __init__(self):
         # Define the nodes of the pipeline
-        self.generate = generate_numbers
+        self.generate_numbers = generate_numbers
         self.add = add
-        self.print = print_sum
+        self.print_sum = print_sum
 
-        self.generate.output.connect(self.add.input)
-        self.add.output.connect(self.print.input)
+        self.generate_numbers.output.connect(self.add.input)
+        self.add.output.connect(self.print_sum.input)
 
 
 pipeline = AddingPipeline()
@@ -415,22 +417,42 @@ pipeline().run()
                         <section class="docs-section" id="item-node-validation">
                             <h2 class="section-heading">Node Validation</h2>
                             <p>
+                                The <code>validation</code> method checks the interconnectivity of a node to its neighbors.
+                                If a node has any input/output connectors that aren't connected to other nodes, an error will be raised.
+                                The error will indicate both the problem and problematic connector.
+                            </p>
+                            <pre class="shadow-lg rounded"><code class="python">
 
+						    </code></pre>
+                            <p>
+                                Individual node validation is a useful step to incorporate into a project test suite.
                             </p>
                         </section><!--//docs-intro-->
 
                         <section class="docs-section" id="item-pipeline-validation">
                             <h2 class="section-heading">Pipeline Validation</h2>
                             <p>
-
+                                <code>Pipeline</code> objects also have a <code>validation</code> method.
+                                The process of validating a pipeline is similar to validating a node, except it checks all nodes in the given pipeline.
+                                Best practice is to validate a pipeline at least once before running it:
                             </p>
+                            <pre class="shadow-lg rounded"><code class="python">
+my_pipeline = MyCustomPipeline()
+my_pipeline.validate()
+my_pipeline.run()
+						    </code></pre>
                         </section><!--//docs-intro-->
 
                         <section class="docs-section" id="item-connector-errors">
                             <h2 class="section-heading">Connector Errors</h2>
                             <p>
-
+                                Data should only ever flow through a pipeline in one direction.
+                                <code>Egon</code> enforces this principle through a signal/slot style design.
+                                To prevent against circular data flow, input connectors can only ever connect to output connectors (and visa/versa).
                             </p>
+                            <pre class="shadow-lg rounded"><code class="python">
+
+						    </code></pre>
                         </section><!--//docs-intro-->
                     </header><!--//docs-header-->
 
@@ -439,9 +461,49 @@ pipeline().run()
                 <article class="docs-article" id="section-FAQ">
                     <header class="docs-header">
                         <h1 class="docs-heading">FAQ</h1>
-                        <section class="docs-intro">
+                        <p>
+                            Answers to some commonly asked questions are listed below.
+                        </p>
+                        <section class="docs-section">
+                            <h2 class="section-heading" id="item-general-questions">General Questions</h2>
+                            <h5><i class="fas fa-question-circle"></i> I have a question or found a bug not mentioned in the docs. What should I do?</h5>
                             <p>
-                                asdf;k
+                                If you have an unanswered question, or you are facing some other issue with the <code>Egon</code> package, please raise an issue on <a href="https://github.com/djperrefort/Egon/issues">GitHub</a>.
+                            </p>
+                            <h5><i class="fas fa-question-circle"></i> What is the preferred method of attribution?</h5>
+                            <p>
+                                Project attributions and acknowledgments are greatly appreciated.
+                                Please cite the following Zenodo DOI in published works.
+                            </p>
+                            <h5><i class="fas fa-question-circle"></i> What License is Egon released under?</h5>
+                            <p>
+                                Egon is open source under the GNU General Public License version 3.0.
+                            </p>
+                            <h5><i class="fas fa-question-circle"></i> Who built Egon?</h5>
+                            <p>
+                                Egon was built by the MWV Research Group at the University of Pittsburgh.
+                                It was designed to support ongoing astrophysical research by providing a uniform framework for deploying analysis pipelines to supercomputing centers..
+                            </p>
+                        </section>
+                        <section class="docs-section">
+                            <h2 class="section-heading" id="item-parallel-processing">Parallel Processing</h2>
+                            <h5><i class="fas fa-question-circle"></i> Does Egon support distributed computing?</h5>
+                            <p>
+                                Egon is designed to be a lightweight parallelization wrapper.
+                                In alignment with this design goal deployment to distributed systems is not currently supported.
+                            </p>
+                            <h5><i class="fas fa-question-circle"></i> Can I dynamically change the number of allocated processes during runtime?</h5>
+                            <p>
+                                No. The number of processes assigned to a given pipeline node is fixed once the node is instantiated.
+                            </p>
+                            <h5><i class="fas fa-question-circle"></i> Help, my pipeline wont exit!</h5>
+                            <p>
+                                Start by making sure you have connected all of your nodes together in the right order.
+                                Also make sure no errors are raised when you call the <code>validate</code> method of your pipeline.
+                                If these two things check out, you likely have one or more nodes that are still expecting input data but haven't received it yet.
+                            </p>
+                            <p>
+                                If you believe your problem may bave been caused by an issue with the <code>Egon</code> package itself, please raise an issue on <a href="https://github.com/djperrefort/Egon/issues">GitHub</a>.
                             </p>
                         </section><!--//docs-intro-->
                     </header><!--//docs-header-->
