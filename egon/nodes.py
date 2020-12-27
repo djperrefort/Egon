@@ -38,11 +38,11 @@ class AbstractNode(abc.ABC):
     def __init__(self, num_processes=1) -> None:
         """Represents a single pipeline node"""
 
-        self._processes = [mp.Process(target=self.execute) for _ in range(num_processes)]
-
         # Note that we use the memory address and not the ``pid`` attribute.
         # ``pid`` is only set after the process is started
+        self._processes = [mp.Process(target=self.execute) for _ in range(num_processes)]
         self._states = mp.Manager().dict({id(p): False for p in self._processes})
+
         self._current_process_state = False
         for connection in self._get_attrs(connectors.Connector):
             connection._node = self
@@ -52,6 +52,19 @@ class AbstractNode(abc.ABC):
         """The number of processes assigned to the current node"""
 
         return len(self._processes)
+
+    @num_processes.setter
+    def num_processes(self, num_processes) -> None:
+        """The number of processes assigned to the current node"""
+
+        if any(p.is_alive() for p in self._processes):
+            raise RuntimeError('Cannot change number of processes while node is running.')
+
+        if self.num_processes == num_processes:
+            return
+
+        self._processes = [mp.Process(target=self.execute) for _ in range(num_processes)]
+        self._states = mp.Manager().dict({id(p): False for p in self._processes})
 
     @property
     def process_finished(self) -> bool:
