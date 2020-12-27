@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Egon Framework</title>
+
+    <!-- Meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description" content="Bootstrap 4 Template For Software Startups">
+    <meta name="author" content="Xiaoying Riley at 3rd Wave Media">
+    <link rel="shortcut icon" href="favicon.ico">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome JS-->
+    <script defer src="assets/fontawesome/js/all.min.js"></script>
+
+    <!-- Plugins CSS -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.2/styles/atom-one-dark.min.css">
+
+    <!-- Theme CSS -->
+    <link id="theme-style" rel="stylesheet" href="assets/css/theme.css">
+</head>
+
+<body class="docs-page">
+    <header class="header fixed-top">
+        <div class="branding docs-branding">
+            <div class="container-fluid position-relative py-2">
+                <div class="docs-logo-wrapper">
+                    <button id="docs-sidebar-toggler" class="docs-sidebar-toggler docs-sidebar-visible mr-2 d-xl-none" type="button">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <div class="site-logo"><a class="navbar-brand" href="index.html">
+                        <img class="logo-icon mr-2" src="assets/images/coderdocs-logo.svg" alt="logo">
+                        <span class="logo-text">Coder<span class="text-alt">Docs</span></span>
+                    </a></div>
+                </div><!--//docs-logo-wrapper-->
+
+                <div class="docs-top-utilities d-flex justify-content-end align-items-center">
+                    <div class="top-search-box d-none d-lg-flex">
+                        <form class="search-form">
+                            <input type="text" placeholder="Search the docs..." name="search" class="form-control search-input">
+                            <button type="submit" class="btn search-btn" value="Search">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div><!--//docs-top-utilities-->
+            </div><!--//container-->
+        </div><!--//branding-->
+    </header><!--//header-->
+
+    <div class="docs-wrapper">
+        <div id="docs-sidebar" class="docs-sidebar">
+            <div class="top-search-box d-lg-none p-3">
+                <form class="search-form">
+                    <input type="text" placeholder="Search the docs..." name="search" class="form-control search-input">
+                    <button type="submit" class="btn search-btn" value="Search"><i class="fas fa-search"></i></button>
+                </form>
+            </div>
+
+            <nav id="docs-nav" class="docs-nav navbar">
+                <ul class="section-items list-unstyled nav flex-column pb-3">
+                    <li class="nav-item section-title"><a class="nav-link scrollto active" href="#section-introduction"><span class="theme-icon-holder mr-2"><i class="fas fa-book"></i></span>Introduction</a></li>
+                    <li class="nav-item"><a class="nav-link scrollto" href="#item-install">Installation</a></li>
+                    <li class="nav-item"><a class="nav-link scrollto" href="#item-how-it-works">How It Works</a></li>
+                    <li class="nav-item section-title mt-3"><a class="nav-link scrollto" href="#section-building-pipelines"><span class="theme-icon-holder mr-2"><i class="fas fa-tools"></i></span>Building a Pipeline</a></li>
+                    <li class="nav-item"><a class="nav-link scrollto" href="#item-source-nodes">Source Nodes</a></li>
+                    <li class="nav-item"><a class="nav-link scrollto" href="#item-target-nodes">Target Nodes</a></li>
+                    <li class="nav-item"><a class="nav-link scrollto" href="#item-generic-nodes">Generic Nodes</a></li>
+                    <li class="nav-item"><a class="nav-link scrollto" href="#item-pipeline-assembly">Pipeline Assembly</a></li>
+                    <li class="nav-item section-title mt-3"><a class="nav-link scrollto" href="#section-shorthand-decorators"><span class="theme-icon-holder mr-2"><i class="fas fa-at"></i></span>Shorthand Decorators</a></li>
+                    <!-- <li class="nav-item section-title"><a class="nav-link scrollto active" href="#section-pipeline-visualization"><span class="theme-icon-holder mr-2"><i class="fas fa-map-signs"></i></span>Pipeline Visualization</a></li> -->
+                    <li class="nav-item section-title"><a class="nav-link scrollto active" href="#section-validation"><span class="theme-icon-holder mr-2"><i class="fas fa-check-circle"></i></span>Pipeline Validation</a></li>
+                    <li class="nav-item"><a class="nav-link scrollto" href="#item-node-validation">Node Validation</a></li>
+                    <li class="nav-item"><a class="nav-link scrollto" href="#item-pipeline-validation">Pipeline Validation</a></li>
+                    <li class="nav-item"><a class="nav-link scrollto" href="#item-connector-errors">Connector Errors</a></li>
+                    <li class="nav-item section-title"><a class="nav-link scrollto active" href="#section-FAQ"><span class="theme-icon-holder mr-2"><i class="fas fa-question-circle"></i></span>Faq</a></li>
+                </ul>
+            </nav><!--//docs-nav-->
+
+        </div><!--//docs-sidebar-->
+
+        <div class="docs-content">
+            <div class="container">
+                <article class="docs-article" id="section-introduction">
+                    <header class="docs-header">
+                        <h1 class="docs-heading">Introduction</h1>
+                        <p>
+                            Egon is a lightweight framework for building data analysis pipelines in Python.
+                            Egon puts your analysis code first, making it easy to implement parallelized workflows without having to deal with the added overhead of message brokers or task managers.
+                            Some of the benefits of the Egon framework are that it:
+                        </p>
+                        <ol>
+                            <li>Integrates easily with existing projects, including test suites and continuous-integration tasks.</li>
+                            <li>Includes automatic pipeline validation to reduce development/implementation errors and improve pipeline stability.</li>
+                            <li>Encourages modular design principles that help you build maintainable code that is easy to test and deploy.</li>
+                            <!-- <li>Makes pipeline visualization a breeze using built-in pipeline visualization tools.</li> -->
+                        </ol>
+                    </header><!--//docs-header-->
+
+                    <section class="docs-intro" id="item-install">
+                        <h2 class="section-heading">Installation</h2>
+                        <p>
+                            Egon is open-source and free to use (although attribution is both appreciated and encouraged where appropriate).
+                            You can install the Python Egon Framework using pip:
+                        </p>
+                        <pre class="shadow-lg rounded"><code class="bash">
+pip install egon
+						</code></pre>
+                        <p>Alternatively, the package source code can be downloaded from
+                            <a href="https://github.com/Egon-Framework/Egon">GitHub.com</a> using your favorite command line utility:
+                        </p>
+                        <pre class="shadow-lg rounded"><code class="bash">
+git clone egon
+cd egon
+python setup.py install --user
+						</code></pre>
+                    </section><!--//section-->
+
+                    <section class="docs-section" id="item-how-it-works">
+                        <h2 class="section-heading">How it Works</h2>
+                        <p>
+                            Egon works by breaking down your analysis into discrete, reusable units.
+                            Those units can then be assembled, tested, and deployed as a single a coherent pipeline.
+                            Consider for a moment the classic example of an ETL pipeline:
+                        </p>
+                        <img class="figure-img img-fluid rounded" src="assets/images/etl.svg" alt="" style="width: 60%;">
+                        <p>
+                            The pipeline shown above consists of three discrete steps, each of which are connected in a particular order.
+                            When building with Egon, this structure is represented as a collection of interconnected
+                            <code>Node</code> objects:
+                        </p>
+                        <img class="figure-img img-fluid rounded" src="assets/images/anotated_etl.svg" alt="" style="width: 100%;">
+                        <p>
+                            <code>Node</code> objects can be connected in any order and are designed to run asynchronously.
+                            This means you can scale your analysis by allocating additional processes to each node.
+                            Nodes are also smart enough to automatically exit once they are no longer needed.
+                        </p>
+                    </section><!--//section-->
+                </article>
+
+                <article class="docs-article" id="section-building-pipelines">
+                    <header class="docs-header">
+                        <h1 class="docs-heading">Building a Pipeline</h1>
+                    </header><!--//docs-header-->
+
+                    <section class="docs-intro">
+                        <p>
+                            The first step in building a pipeline is to define the necessary nodes.
+                            Ideally, each node should reflect a single independent task.
+                            When processing a fixed amount of information, nodes should also be able to shutdown automatically once there is no more data for them to process.
+                        </p>
+                        <p>
+                            Let's continue from the ETL example shown above.
+                        </p>
+                    </section>
+
+                    <div class="alert alert-primary" role="alert">
+                        The following sections demonstrate the construction of pipeline nodes as a dedicated class.
+                        This is the most flexible way to build a node, but if you are looking for a shorter syntax check out the <a class="scrollto active" href="#section-shorthand-decorators">Shorthand</a> section.
+                    </div>
+
+                    <section class="docs-intro" id="item-source-nodes">
+                        <h2 class="section-heading">Source Nodes</h2>
+                        <p>
+                            <code>Source</code> type nodes are special in that they have no incoming pipeline connections and can only produce data.
+                            This makes them ideal for the <b>extract</b> task.
+
+                        </p>
+                        <p>
+                            We build the extract node as a class that inherits from the <code>Source</code> class.
+                            We add a single output connector and define the analysis logic of the node in the <code>action</code> method.
+                        </p>
+
+                        <pre class="shadow-lg rounded"><code class="python">
+from egon.connectors import Output
+from egon.nodes import Source
+
+
+# Nodes are represented as classes that inherit from the egon.nodes module
+class Extract(Source):
+
+    # Here we define an output connector for the class
+    # This allows the node to send data further down the pipeline
+    # For more complicated nodes, you can define as many connectors as needed.
+    data_out = Output()
+
+    def setup(self):
+        """Setup tasks are optional and can be used to configure a pipeline node"""
+
+        self.database = connect_to_database()
+
+    def action(self):
+        """Action tasks reflect the core analysis logic of a pipeline node"""
+
+        # Once the iterator is exhausted this function will exit and the pipeline node will start to shutdown
+        for data in self.database.get_fixed_number_of_items():
+            self.data_output.put(data)
+
+    def teardown(self):
+        """Teardown tasks are optional and can be used for clean up tasks"""
+
+        self.database.disconnect()
+							</code></pre>
+
+                    </section><!--//section-->
+
+                    <section class="docs-section" id="item-target-nodes">
+                        <h2 class="section-heading">Target Nodes</h2>
+                        <p>
+                            <code>Target</code> nodes are similar to <code>Source</code> nodes except they receive data instead of sending it.
+                            This makes them ideal for the <b>load</b> task.
+
+                        </p>
+                        <pre class="shadow-lg rounded"><code class="python">
+from egon.connectors import Input
+from egon.nodes import Target
+
+
+class Load(Target):
+
+    # Here we define an input connector for the class
+    # This allows the node to receive data from other nodes
+    data_input = Input()
+
+    # The rest of the class should include the same
+    # ``setup``, ``action``, and ``teardown`` structure from earlier.
+    ...
+                        </code></pre>
+
+                        <p>
+                            It's important that pipeline nodes exit gracefully once there is no more data to process.
+                            Input connectors include the <code>iter_get</code> method which allows you to iterate over incoming data.
+                            <code>iter_get</code> is smart enough to automatically exit once there are no longer any upstream processes left to feed it data.
+                        </p>
+                        <pre class="shadow-lg rounded"><code class="python">
+class Load(Target):
+
+    data_input = Input()
+
+    def action(self):
+        """Load data into a directory"""
+
+        for data in self.data_input.iter_get():
+            ... # Logic to insert data into a target database goes here
+                        </code></pre>
+
+                    </section><!--//section-->
+
+                    <section class="docs-section" id="item-generic-nodes">
+                        <h2 class="section-heading">Generic Nodes</h2>
+
+                        <p>
+                            Generic <code>Node</code> objects can have both input and output connectors.
+                            In principle we can define as many input or output connections as necessary.
+                            However for the ETL example we only need one of each.
+                        </p>
+
+                        <pre class="shadow-lg rounded"><code class="python">
+from egon.connectors import Input, Output
+from egon.nodes import Node
+
+class Transform(Node):
+
+    # ``Node`` subclasses can have an arbitrary number of input AND output connectors.
+    # Here we define an input AND output connectors for the class
+    # This allows the node to communicate with upstream and downstream nodes
+    data_in = Input()
+    data_out = Output()
+
+    # The rest of the class should include the same
+    # ``setup``, ``action``, and ``teardown`` structure from earlier.
+    ...
+                    </code></pre>
+                    </section><!--//section-->
+
+                    <section class="docs-section" id="item-pipeline-assembly">
+                        <h2 class="section-heading">Pipeline Assembly</h2>
+                        <p>
+                            The last step in constructing a pipeline is to connect together the individual nodes.
+                            Connectors provide a signal/slot style interface where input/output connectors can be connected together as follows:
+                        </p>
+                        <pre class="shadow-lg rounded"><code class="python">
+from egon.pipeline import Pipeline
+
+
+class ETL(Pipeline):
+
+    def __init__(self):
+
+        # Define the nodes of the pipeline
+        self.extract = Extract()
+        self.transform = Transform(num_processes=4)  # Allocate multiple processes
+        self.load = Load()
+
+        # Connect each of the nodes together
+        self.extract.data_out.connect(self.transform.data_in)
+        self.transform.data_out.connect(self.load.data_in)
+                        </code></pre>
+                        <p>
+                            The <code>validate</code> task handles process allocation and runs automated validation tasks (see the documentation below).
+                            The entire pipeline can then be launched in one line:
+                        </p>
+
+                        <pre class="shadow-lg rounded"><code class="python">
+etl_pipeline = ETL()
+etl_pipeline.validate()
+etl_pipeline.run()
+                        </code></pre>
+                    </section><!--//section-->
+                </article><!--//docs-article-->
+
+                <article class="docs-article" id="section-shorthand-decorators">
+                    <header class="docs-header">
+                        <h1 class="docs-heading">Shorthand Decorators</h1>
+                        <section class="docs-intro">
+                            <p>
+                                Egon provides function decorators that make it easy to cast existing logic as pipeline objects.
+                                This allows you to quickly build pipeline nodes without having to define an entire class.
+                                For example, a node designed to determine the sum of two numbers might look as follows:
+                            </p>
+                            <pre class="shadow-lg rounded"><code class="python">
+from egon.decorators import as_node
+
+@as_node
+def add_two_numbers(x, y):
+    return x + y
+						    </code></pre>
+                            <div class="alert alert-primary" role="alert">
+                                Wrapped functions maintain the same docstring and signature as the original function.
+                                They can also be called in exactly the same manner as their unwrapped counterparts.
+                                This allows you to easily port existing logic into a pipeline structure without impacting the existing API design.
+                            </div>
+                            <p>
+                                Separate decorators exist for casting functions as different kinds of pipeline nodes.
+                                They behave exactly the same as class based nodes, except they do not support setup or teardown tasks.
+                                Here is an example of a pipeline for adding two numbers using function decorators:
+                            </p>
+                            <pre class="shadow-lg rounded"><code class="python">
+from egon.decorators import as_source, as_node, as_target
+from egon.pipeline import Pipeline
+
+
+@as_source
+def generate_numbers() -> Iterable:
+    for i in range(100):
+        yield i, i + 1
+
+
+@as_node
+def add(x: int, y: int) -> int:
+    return x + y
+
+
+@as_target
+def print_sum(x: int) -> None:
+    print(x)
+
+
+class AddingPipeline(Pipeline):
+    """A pipeline for generating and then adding numbers"""
+
+    def __init__(self):
+        # Define the nodes of the pipeline
+        self.generate = generate_numbers
+        self.add = add
+        self.print = print_sum
+
+        self.generate.output.connect(self.add.input)
+        self.add.output.connect(self.print.input)
+
+
+pipeline = AddingPipeline()
+pipeline.validate()
+pipeline().run()
+						    </code></pre>
+                        </section><!--//docs-intro-->
+                    </header><!--//docs-header-->
+
+                </article><!--//docs-article-->
+
+                <!--
+                <article class="docs-article" id="section-pipeline-visualization">
+                    <header class="docs-header">
+                        <h1 class="docs-heading">Pipeline Visualization</h1>
+                        <section class="docs-intro">
+                            <div class="alert alert-danger" role="alert">
+                                Pipeline visualization is not currently available in the public package release.
+                                Stay tuned for official visualization support in upcoming package versions.
+                            </div>
+                        </section></!--//docs-intro--/>
+                    </header></!--//docs-header--/>
+
+                </article></!--//docs-article--/>
+                -->
+
+                <article class="docs-article" id="section-validation">
+                    <header class="docs-header">
+                        <h1 class="docs-heading">Pipeline Validation</h1>
+                        <section class="docs-intro">
+                            <p>
+                                As the size and complexity of your pipeline grows, you'll want to be sure you don't leave any loose ends.
+                                Nodes with unconnected inputs/outputs can leave you with a broken pipeline that consumes unnecessary resources.
+                                Fortunately, <code>Egon</code> incorporates automated validation methods to help ensure you pipeline runs smoothly.
+                            </p>
+                        </section><!--//docs-intro-->
+
+                        <section class="docs-section" id="item-node-validation">
+                            <h2 class="section-heading">Node Validation</h2>
+                            <p>
+
+                            </p>
+                        </section><!--//docs-intro-->
+
+                        <section class="docs-section" id="item-pipeline-validation">
+                            <h2 class="section-heading">Pipeline Validation</h2>
+                            <p>
+
+                            </p>
+                        </section><!--//docs-intro-->
+
+                        <section class="docs-section" id="item-connector-errors">
+                            <h2 class="section-heading">Connector Errors</h2>
+                            <p>
+
+                            </p>
+                        </section><!--//docs-intro-->
+                    </header><!--//docs-header-->
+
+                </article><!--//docs-article-->
+
+                <article class="docs-article" id="section-FAQ">
+                    <header class="docs-header">
+                        <h1 class="docs-heading">FAQ</h1>
+                        <section class="docs-intro">
+                            <p>
+                                asdf;k
+                            </p>
+                        </section><!--//docs-intro-->
+                    </header><!--//docs-header-->
+
+                </article><!--//docs-article-->
+
+                <footer class="footer">
+                    <div class="container text-center py-5">
+                        <!--/* This template is free as long as you keep the footer attribution link. If you'd like to use the template without the attribution link, you can buy the commercial license via our website: themes.3rdwavemedia.com Thank you for your support. :) */-->
+                        <small class="copyright">Designed with <i class="fas fa-heart" style="color: #fb866a;"></i> by
+                            <a class="theme-link" href="http://themes.3rdwavemedia.com" target="_blank">Xiaoying Riley</a> for developers</small>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div><!--//docs-wrapper-->
+
+    <!-- Javascript -->
+    <script src="assets/plugins/jquery-3.4.1.min.js"></script>
+    <script src="assets/plugins/popper.min.js"></script>
+    <script src="assets/plugins/bootstrap/js/bootstrap.min.js"></script>
+
+    <!-- Page Specific JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.8/highlight.min.js"></script>
+    <script src="assets/js/highlight-custom.js"></script>
+    <script src="assets/plugins/jquery.scrollTo.min.js"></script>
+    <script src="assets/plugins/lightbox/dist/ekko-lightbox.min.js"></script>
+    <script src="assets/js/docs.js"></script>
+
+</body>
+
+</html> 
+
