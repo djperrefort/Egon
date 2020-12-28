@@ -34,7 +34,7 @@ class ObjectCollection:
         """
 
         # Map object hash values to their index in a list
-        self._object_list = list(data) if data else []
+        self._object_list = list(set(data)) if data else []
         self._index_map = {o: i for i, o in enumerate(self._object_list)}
 
     def add(self, x: Any) -> None:
@@ -77,6 +77,9 @@ class ObjectCollection:
 
     def __contains__(self, item: Any) -> bool:
         return item in self._object_list
+
+    def __len__(self) -> int:
+        return len(self._object_list)
 
     def __repr__(self) -> str:  # pragma: no cover
         return f'<Container({self._object_list})>'
