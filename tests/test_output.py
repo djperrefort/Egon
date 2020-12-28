@@ -15,6 +15,12 @@ class InstanceConnections(TestCase):
         self.input_connector = Input()
         self.output_connector = Output()
 
+    def test_error_on_connection_to_same_type(self) -> None:
+        """An error is raised when connecting two inputs together"""
+
+        with self.assertRaises(ValueError):
+            self.output_connector.connect(Output())
+
     def test_overwrite_error_on_connection_overwrite(self) -> None:
         """An error is raised when trying to overwrite an existing connection"""
 
@@ -34,12 +40,6 @@ class InstanceConnections(TestCase):
         self.assertFalse(self.output_connector.is_connected)
         self.output_connector.connect(self.input_connector)
         self.assertTrue(self.output_connector.is_connected)
-
-    def test_error_on_connection_to_same_type(self) -> None:
-        """An error is raised when connecting two inputs together"""
-
-        with self.assertRaises(ValueError):
-            self.output_connector.connect(Output())
 
 
 class InstanceDisconnect(TestCase):
@@ -70,8 +70,15 @@ class InstanceDisconnect(TestCase):
 
         Output().disconnect()
 
+    def test_is_connected_boolean(self) -> None:
+        """The ``has_connections`` method returns the current connection state"""
 
-class Put(TestCase):
+        self.assertTrue(self.output.is_connected)
+        self.output.disconnect()
+        self.assertFalse(self.output.is_connected)
+
+
+class ConnectorPut(TestCase):
     """Test data storage in ``Output`` instances"""
 
     def setUp(self) -> None:
