@@ -14,3 +14,8 @@ dist/
 
 # Built Docs
 docs/build
+*.scssc
+*.css.map
+docs/assets/fontawesome/scss/*.css
+docs/assets/scss/*.css
+docs/assets/scss/bootstrap/scss/*.css

@@ -19,7 +19,7 @@ class Pipeline:
     """Manages a collection of nodes as a single analysis pipeline"""
 
     def validate(self) -> None:
-        """Set up the pipeline and check for any invalide node states"""
+        """Set up the pipeline and check for any invalid node states"""
 
         # Make sure the nodes are in a runnable condition before we start spawning _processes
         for node in self.get_nodes():

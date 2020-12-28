@@ -1,7 +1,52 @@
+from egon.connectors import KillSignal, Input, Output
+
+"""Tests for connector objects defined in the ``connectors`` module"""
+
 from unittest import TestCase
 
-from egon.connectors import KillSignal
-from tests.mock import MockTarget, MockSource
+from tests.mock import MockSource, MockTarget
+
+
+class InstanceConnections(TestCase):
+    """Test the connection of generic connector objects to other"""
+
+    def setUp(self) -> None:
+        """Define a generic ``Connector`` instance"""
+
+        self.input_connector = Input()
+        self.output_connector = Output()
+
+    def test_is_connected_boolean(self) -> None:
+        """The ``has_connections`` method returns the current connection state"""
+
+        self.assertFalse(self.input_connector.is_connected)
+        self.output_connector.connect(self.input_connector)
+        self.assertTrue(self.input_connector.is_connected)
+
+
+class PartnerMapping(TestCase):
+    """Test connectors with an established connection correctly map to neighboring connectors/nodes"""
+
+    def setUp(self) -> None:
+        """Create two connected pipeline elements"""
+
+        self.source1 = MockSource()
+        self.source2 = MockSource()
+        self.target = MockTarget()
+
+        self.source1.output.connect(self.target.input)
+        self.source2.output.connect(self.target.input)
+
+    def test_is_aware_of_partners(self) -> None:
+        """Test connectors map to the correct partner connector"""
+
+        output_connectors = [self.source1.output, self.source2.output]
+        self.assertCountEqual(output_connectors, self.target.input.get_partners())
+
+    def test_is_aware_of_parent(self) -> None:
+        """Test connectors map to their partner"""
+
+        self.assertIs(self.target.input.parent_node, self.target)
 
 
 class InputGet(TestCase):

@@ -43,7 +43,7 @@ class WrappedSource(nodes.Source):
         for x in self._func():
             self.output.put(x)
 
-    def __str__(self) -> str:  # pragma: no cover
+    def __repr__(self) -> str:  # pragma: no cover
         return f'<WrappedSource(wrapped_function={self._func.__name__}) object at {hex(id(self))}>'
 
 
@@ -61,7 +61,7 @@ class WrappedTarget(nodes.Target):
         for data in self.input.iter_get():
             self._func(data)
 
-    def __str__(self) -> str:  # pragma: no cover
+    def __repr__(self) -> str:  # pragma: no cover
         return f'<WrappedTarget(wrapped_function={self._func.__name__}) object at {hex(id(self))}>'
 
 
@@ -80,7 +80,7 @@ class WrappedNode(nodes.Node):
         for data in self.input.iter_get():
             self.output.put(self._func(data))
 
-    def __str__(self) -> str:  # pragma: no cover
+    def __repr__(self) -> str:  # pragma: no cover
         return f'<WrappedNode(wrapped_function={self._func.__name__}) object at {hex(id(self))}>'
 
 

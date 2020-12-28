@@ -14,7 +14,7 @@ from typing import List, Union, Collection
 from . import connectors, exceptions
 
 
-def _get_nodes_from_connectors(connector_list: Collection[connectors.Connector]) -> List:
+def _get_nodes_from_connectors(connector_list: Collection[connectors.AbstractConnector]) -> List:
     """Return the parent nodes from a list of ``Connector`` objects
     
     Args:
@@ -26,8 +26,11 @@ def _get_nodes_from_connectors(connector_list: Collection[connectors.Connector])
 
     nodes = []
     for c in connector_list:
-        if c.is_connected():
-            nodes.append(c.partner.parent_node)
+        if isinstance(c, connectors.Output) and c.is_connected:
+            nodes.append(c.get_partner().parent_node)
+
+        if isinstance(c, connectors.Input) and c.is_connected:
+            nodes.extend(p.parent_node for p in c.get_partners())
 
     return nodes
 
@@ -44,7 +47,7 @@ class AbstractNode(abc.ABC):
         self._states = mp.Manager().dict({id(p): False for p in self._processes})
 
         self._current_process_state = False
-        for connection in self._get_attrs(connectors.Connector):
+        for connection in self._get_attrs(connectors.AbstractConnector):
             connection._node = self
 
     @property
@@ -60,7 +63,7 @@ class AbstractNode(abc.ABC):
         if any(p.is_alive() for p in self._processes):
             raise RuntimeError('Cannot change number of processes while node is running.')
 
-        if self.num_processes == num_processes:
+        if self.num_processes == num_processes:  # pragma: no cover
             return
 
         self._processes = [mp.Process(target=self.execute) for _ in range(num_processes)]
@@ -98,8 +101,8 @@ class AbstractNode(abc.ABC):
             MissingConnectionError: For an invalid instance construction
         """
 
-        for conn in self._get_attrs(connectors.Connector):
-            if not conn.is_connected():
+        for conn in self._get_attrs(connectors.AbstractConnector):
+            if not conn.is_connected:
                 raise exceptions.MissingConnectionError(
                     f'Connector {conn} does not have an established connection (Node: {conn.parent_node})')
 
@@ -150,8 +153,12 @@ class AbstractNode(abc.ABC):
         """Return whether the node is still expecting data from upstream"""
 
         for input_connector in self._get_attrs(connectors.Input):
-            if not (input_connector.empty() and input_connector.partner.parent_node.node_finished):
+            if not input_connector.empty():
                 return True
+
+            for partner in input_connector.get_partners():
+                if not partner.parent_node.node_finished:
+                    return True
 
         return False
 
@@ -206,7 +213,7 @@ class Node(Target, Source, ABC):
             OrphanedNodeError: For an instance that is inaccessible by connectors
         """
 
-        if not self._get_attrs(connectors.Connector):
+        if not self._get_attrs(connectors.AbstractConnector):
             raise exceptions.OrphanedNodeError('Node has no associated connectors and is inaccessible by the pipeline.')
 
         self._validate_connections()

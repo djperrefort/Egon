@@ -24,7 +24,7 @@ class ProcessAllocation(TestCase):
         self.assertEqual(num_processes, node.num_processes)
 
     def test_error_if_processes_are_alive(self) -> None:
-        """Test a RuntimeError is raised when trying to realocate processes on a running node"""
+        """Test a RuntimeError is raised when trying to reallocate processes on a running node"""
 
         node = mock.MockNode()
         node._processes[0].start()
@@ -97,7 +97,7 @@ class ExpectingData(TestCase):
     """Tests for the ``expecting_data`` function
 
     The ``expecting_data`` function combines two booleans.
-    This class evaluates all four suqares of the corresponding truth table
+    This class evaluates all four squares of the corresponding truth table
     """
 
     def setUp(self) -> None:

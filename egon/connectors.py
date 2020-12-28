@@ -1,17 +1,19 @@
-"""``Connector`` objects are responsible for the communication of information
-between nodes. Each connector instance is assigned to a single node and can be
-used to send or receive data depending on the type of connector.
-``Output`` connectors are used to send data and ``Input`` objects are
-used to receive data.
+"""``Connector`` objects are responsible for the communication of
+information between nodes. Each connector instance is assigned to a
+single  node and can be used to send or receive data depending on the
+type of connector. ``Output`` connectors are used to send data and
+``Input`` objects are used to receive data.
 """
 
 from __future__ import annotations
 
+import abc
 import multiprocessing as mp
 from queue import Empty
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING, Iterable, List, Collection
 
 from . import exceptions
+from .exceptions import MissingConnectionError
 
 if TYPE_CHECKING:  # pragma: no cover
     from .nodes import AbstractNode
@@ -21,16 +23,80 @@ class KillSignal:
     """Used to indicate that a process should exit"""
 
 
-class DataStore:
+class ObjectCollection:
+    """Collection of objects with O(1) add and remove"""
+
+    def __init__(self, data: Optional[Collection] = None) -> None:
+        """A mutable collection of arbitrary objects
+
+        Args:
+            data: Populate the collection instance with the given data
+        """
+
+        # Map object hash values to their index in a list
+        self._object_list = list(set(data)) if data else []
+        self._index_map = {o: i for i, o in enumerate(self._object_list)}
+
+    def add(self, x: Any) -> None:
+        """Add a hashable object to the collection
+
+        Args:
+            x: The object to add
+        """
+
+        # Exit if ``x`` is already in the collection
+        if x in self._index_map:
+            return
+
+        # Add ``x`` to the end of the collection
+        self._index_map[x] = len(self._object_list)
+        self._object_list.append(x)
+
+    def remove(self, x: Any) -> None:
+        """Remove an object from the collection
+
+        Args:
+            x: The object to remove
+        """
+
+        index = self._index_map[x]
+        del self._index_map[x]
+
+        # Swap element with last element so that removal from the list can be done in O(1) time
+        size = len(self._object_list)
+        last = self._object_list[size - 1]
+        self._object_list[index], self._object_list[size - 1] = self._object_list[size - 1], self._object_list[index]
+        del self._object_list[-1]
+
+        # Update hash table for new index of last element
+        self._index_map[last] = index
+
+    def __iter__(self) -> Iterable:
+        return iter(self._object_list)
+
+    def __contains__(self, item: Any) -> bool:
+        return item in self._object_list
+
+    def __len__(self) -> int:
+        return len(self._object_list)
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f'<Container({self._object_list})>'
+
+
+class AbstractConnector:
     """Exposes select functionality from an underlying ``Queue`` object"""
 
-    def __init__(self, maxsize=0) -> None:
+    def __init__(self, name: str = None, maxsize: int = 0) -> None:
         """Queue-like object for passing data between nodes and / or parallel processes
 
         Args:
-            maxsize: Maximum number of objects to store in memory
+            name: Human readable name for the connector object
+            maxsize: Maximum number of items to store in the underlying queue
         """
 
+        self.name = name
+        self._node: Optional[AbstractNode] = None  # The node that this connector is assigned to
         self._queue = mp.Queue(maxsize=maxsize)
 
     def empty(self) -> bool:
@@ -48,78 +114,42 @@ class DataStore:
 
         return self._queue.qsize()
 
-
-class Connector(DataStore):
-    """Base class for signal/slot-like connector objects"""
-
-    def __init__(self, name: str = None) -> None:
-        """Handles the communication of input/output data between pipeline nodes
-
-        Args:
-            name: Human readable name for the connector. Used in error and status messages.
-        """
-
-        super().__init__()
-        self.name = name
-        self._node: Optional[AbstractNode] = None  # The node that this connector is assigned to
-        self._connected_partner: Optional[Connector] = None  # The connector object of another node
-
-    def is_connected(self) -> bool:
-        """Return whether the connector has an established connection"""
-
-        return not (self._connected_partner is None)
-
-    def connect(self, connector: Connector, maxsize: int = 0) -> None:
-        """Establish the flow of data between this connector and another connector
-
-        Args:
-            connector: The connector object ot connect with
-            maxsize: The maximum number of communicated items to store in memory
-        """
-
-        if type(connector) is type(self):
-            raise ValueError('Cannot join together two connection objects of the same type.')
-
-        if connector.is_connected() or self.is_connected():
-            raise exceptions.OverwriteConnectionError(
-                'Connector object already has a pre-established connection.')
-
-        # Once a connection is established between two connectors, they share an internal queue
-        self._connected_partner = connector
-        connector._connected_partner = self
-        connector._queue = self._queue = mp.Queue(maxsize)
-
-    def disconnect(self) -> None:
-        """Disconnect any established connections"""
-
-        old_partner = self._connected_partner
-        self._connected_partner = None
-        self._queue = mp.Queue()
-
-        if old_partner:
-            old_partner.disconnect()
-
-    @property
-    def partner(self) -> Connector:
-        """The connector object connected to this instance
-
-        Returns ``None`` if no connection has been established
-        """
-
-        return self._connected_partner
-
     @property
     def parent_node(self) -> AbstractNode:
         """The parent node this connector is assigned to"""
 
         return self._node
 
-    def __repr__(self) -> str:  # pragma: no cover
-        return f'<egon.connectors.Input(name={self.name}) object at {hex(id(self))}>'
+    @property
+    @abc.abstractmethod
+    def is_connected(self) -> bool:  # pragma: no cover
+        pass
 
 
-class Input(Connector):
+class Input(AbstractConnector):
     """Handles the input of data into a pipeline node"""
+
+    def __init__(self, name: str = None, maxsize: int = 0) -> None:
+        """Handles the input of data into a pipeline node
+
+        Args:
+            name: Human readable name for the connector object
+            maxsize: The maximum number of communicated items to store in memory
+        """
+
+        super().__init__(name, maxsize)
+        self._connected_partners = ObjectCollection()  # Tracks connector objects that feed into the input
+
+    @property
+    def is_connected(self) -> bool:
+        """Return whether the connector has any established connections"""
+
+        return bool(self._connected_partners)
+
+    def get_partners(self) -> List[Output]:
+        """Return a list of output connectors that are connected to this input"""
+
+        return list(self._connected_partners)
 
     def get(self, timeout: Optional[int] = None, refresh_interval: int = 2):
         """Blocking call to retrieve input data
@@ -139,7 +169,7 @@ class Input(Connector):
 
         timeout = timeout or float('inf')
         while timeout > 0:
-            if self.is_connected() and not self.parent_node.expecting_data():
+            if self.is_connected and not self.parent_node.expecting_data():
                 return KillSignal
 
             try:
@@ -163,11 +193,79 @@ class Input(Connector):
 
             yield data
 
+    def __repr__(self) -> str:  # pragma: no cover
+        return f'<egon.connectors.Input(name={self.name}) object at {hex(id(self))}>'
 
-class Output(Connector):
+
+class Output(AbstractConnector):
     """Handles the output of data from a pipeline node"""
 
-    def put(self, x: Any) -> None:
-        """Add data into the connector"""
+    def __init__(self, name: str = None) -> None:
+        """Handles the output of data from a pipeline node
+
+        Args:
+            name: Human readable name for the connector object
+        """
+
+        super().__init__(name)
+        self._partner: Optional[Input] = None  # The connector object of another node
+
+    @property
+    def is_connected(self) -> bool:
+        """Return whether the connector has any established connections"""
+
+        return bool(self._partner)
+
+    def get_partner(self) -> Input:
+        """The connector object connected to this instance
+
+        Returns ``None`` if no connection has been established
+        """
+
+        return self._partner
+
+    def connect(self, connector: Input) -> None:
+        """Establish the flow of data between this connector and another connector
+
+        Args:
+            connector: The connector object ot connect with
+        """
+
+        if type(connector) is type(self):
+            raise ValueError('Cannot join together two connection objects of the same type.')
+
+        if self.is_connected:
+            raise exceptions.OverwriteConnectionError(
+                'The current output connector is already connected to an input. Disconnect the output before re-connecting.')
+
+        # Once a connection is established between two connectors, they share an internal queue
+        self._partner = connector
+        connector._connected_partners.add(self)
+        self._queue = connector._queue
+
+    def disconnect(self) -> None:
+        """Disconnect any established connections"""
+
+        if self.is_connected:
+            self._partner._connected_partners.remove(self)
+            self._partner = None
+            self._queue = None
+
+    def put(self, x: Any, raise_missing_connection: bool = True) -> None:
+        """Add data into the connector
+
+        Args:
+            x: The value to put into the connector
+            raise_missing_connection: Raise an error if trying to put data into an unconnected output
+
+        Raises:
+            MissingConnectionError: If trying to put data into an output that isn't connected to an input
+        """
+
+        if not self.is_connected and raise_missing_connection:
+            raise MissingConnectionError('Output connector is not connected to an input to send data to.')
 
         self._queue.put(x)
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f'<egon.connectors.Output(name={self.name}) object at {hex(id(self))}>'
