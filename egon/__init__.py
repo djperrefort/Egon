@@ -1,5 +1,6 @@
 """Egon is a lightweight framework for the development of parallelized data
-analysis pipelines.
+analysis pipelines. See the online documentation at
+https://mwvgroup.github.io/Egon/
 """
 
 __version__ = '0.1.0'

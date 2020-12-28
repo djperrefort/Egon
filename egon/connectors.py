@@ -27,7 +27,7 @@ class ObjectCollection:
     """Collection of objects with O(1) add and remove"""
 
     def __init__(self, data: Optional[Collection] = None) -> None:
-        """Collection of objects with O(1) add and remove
+        """A mutable collection of arbitrary objects
 
         Args:
             data: Populate the collection instance with the given data
@@ -59,7 +59,6 @@ class ObjectCollection:
             x: The object to remove
         """
 
-        print(self._index_map)
         index = self._index_map[x]
         del self._index_map[x]
 
@@ -92,7 +91,7 @@ class AbstractConnector:
         """Queue-like object for passing data between nodes and / or parallel processes
 
         Args:
-            name: Human readable name of the queue
+            name: Human readable name for the connector object
             maxsize: Maximum number of items to store in the underlying queue
         """
 
@@ -131,10 +130,10 @@ class Input(AbstractConnector):
     """Handles the input of data into a pipeline node"""
 
     def __init__(self, name: str = None, maxsize: int = 0) -> None:
-        """Handles the communication of input/output data between pipeline nodes
+        """Handles the input of data into a pipeline node
 
         Args:
-            name: Human readable name of the queue
+            name: Human readable name for the connector object
             maxsize: The maximum number of communicated items to store in memory
         """
 
@@ -148,6 +147,8 @@ class Input(AbstractConnector):
         return bool(self._connected_partners)
 
     def get_partners(self) -> List[Output]:
+        """Return a list of output connectors that are connected to this input"""
+
         return list(self._connected_partners)
 
     def get(self, timeout: Optional[int] = None, refresh_interval: int = 2):
@@ -200,10 +201,10 @@ class Output(AbstractConnector):
     """Handles the output of data from a pipeline node"""
 
     def __init__(self, name: str = None) -> None:
-        """Handles the communication of input/output data between pipeline nodes
+        """Handles the output of data from a pipeline node
 
         Args:
-            name: Human readable name of the queue
+            name: Human readable name for the connector object
         """
 
         super().__init__(name)
@@ -235,7 +236,7 @@ class Output(AbstractConnector):
 
         if self.is_connected:
             raise exceptions.OverwriteConnectionError(
-                'Output connector has a pre-established connection. Disconnect the output before re-connecting.')
+                'The current output connector is already connected to an input. Disconnect the output before re-connecting.')
 
         # Once a connection is established between two connectors, they share an internal queue
         self._partner = connector

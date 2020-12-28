@@ -63,7 +63,7 @@ class AbstractNode(abc.ABC):
         if any(p.is_alive() for p in self._processes):
             raise RuntimeError('Cannot change number of processes while node is running.')
 
-        if self.num_processes == num_processes:
+        if self.num_processes == num_processes:  # pragma: no cover
             return
 
         self._processes = [mp.Process(target=self.execute) for _ in range(num_processes)]

@@ -39,7 +39,7 @@ class TestPipelineThroughput(TestCase):
     """Test all data makes it through the pipeline"""
 
     def runTest(self) -> None:
-        """Compare input and ouput pipeline values"""
+        """Compare input and output pipeline values"""
 
         # Run should populate the global queue
         AddingPipeline().run()

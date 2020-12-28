@@ -24,7 +24,7 @@ class ProcessAllocation(TestCase):
         self.assertEqual(num_processes, node.num_processes)
 
     def test_error_if_processes_are_alive(self) -> None:
-        """Test a RuntimeError is raised when trying to realocate processes on a running node"""
+        """Test a RuntimeError is raised when trying to reallocate processes on a running node"""
 
         node = mock.MockNode()
         node._processes[0].start()
