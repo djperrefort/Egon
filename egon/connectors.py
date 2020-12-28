@@ -24,13 +24,18 @@ class KillSignal:
 
 
 class Collection:
+    """Collection of objects with O(1) add and remove"""
 
-    def __init__(self) -> None:
-        """Collection of objects with O(1) add and remove"""
+    def __init__(self, data: Optional[Collection] = None) -> None:
+        """Collection of objects with O(1) add and remove
+
+        Args:
+            data: Populate the collection instance with the given data
+        """
 
         # Map object hash values to their index in a list
-        self.hash_map = {}
-        self.object_list = []
+        self._object_list = list(data) if data else []
+        self._index_map = {o: i for i, o in enumerate(self._object_list)}
 
     def add(self, x: Any) -> None:
         """Add a hashable object to the collection
@@ -40,12 +45,12 @@ class Collection:
         """
 
         # Exit if ``x`` is already in the collection
-        if x in self.hash_map:
+        if x in self._index_map:
             return
 
         # Add ``x`` to the end of the collection
-        self.hash_map[x] = len(self.object_list)
-        self.object_list.append(x)
+        self._index_map[x] = len(self._object_list)
+        self._object_list.append(x)
 
     def remove(self, x: Any) -> None:
         """Remove an object from the collection
@@ -54,20 +59,27 @@ class Collection:
             x: The object to remove
         """
 
-        index = self.hash_map[x]
-        del self.hash_map[x]
+        print(self._index_map)
+        index = self._index_map[x]
+        del self._index_map[x]
 
         # Swap element with last element so that removal from the list can be done in O(1) time
-        size = len(self.object_list)
-        last = self.object_list[size - 1]
-        self.object_list[index], self.object_list[size - 1] = self.object_list[size - 1], self.object_list[index]
-        del self.object_list[-1]
+        size = len(self._object_list)
+        last = self._object_list[size - 1]
+        self._object_list[index], self._object_list[size - 1] = self._object_list[size - 1], self._object_list[index]
+        del self._object_list[-1]
 
         # Update hash table for new index of last element
-        self.hash_map[last] = index
+        self._index_map[last] = index
 
     def __iter__(self) -> Iterable:
-        return iter(self.object_list)
+        return iter(self._object_list)
+
+    def __contains__(self, item: Any) -> bool:
+        return item in self._object_list
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f'<Container({self._object_list})>'
 
 
 class AbstractConnector:
@@ -108,7 +120,7 @@ class AbstractConnector:
 
     @property
     @abc.abstractmethod
-    def is_connected(self) -> bool:
+    def is_connected(self) -> bool:  # pragma: no cover
         pass
 
 

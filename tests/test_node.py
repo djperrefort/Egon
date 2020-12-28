@@ -97,7 +97,7 @@ class ExpectingData(TestCase):
     """Tests for the ``expecting_data`` function
 
     The ``expecting_data`` function combines two booleans.
-    This class evaluates all four suqares of the corresponding truth table
+    This class evaluates all four squares of the corresponding truth table
     """
 
     def setUp(self) -> None:
