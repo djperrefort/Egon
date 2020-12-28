@@ -177,7 +177,7 @@ class Input(AbstractConnector):
 
             yield data
 
-    def __str__(self) -> str:  # pragma: no cover
+    def __repr__(self) -> str:  # pragma: no cover
         return f'<egon.connectors.Input(name={self.name}) object at {hex(id(self))}>'
 
 
@@ -251,5 +251,5 @@ class Output(AbstractConnector):
 
         self._queue.put(x)
 
-    def __str__(self) -> str:  # pragma: no cover
+    def __repr__(self) -> str:  # pragma: no cover
         return f'<egon.connectors.Output(name={self.name}) object at {hex(id(self))}>'
