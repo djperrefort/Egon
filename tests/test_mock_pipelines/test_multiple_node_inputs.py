@@ -60,4 +60,4 @@ class TestPipelineThroughput(TestCase):
         while GLOBAL_QUEUE.qsize() != 0:
             l.append(GLOBAL_QUEUE.get())
 
-        self.assertListEqual(TEST_INPUTS, l)
+        self.assertCountEqual(TEST_INPUTS, l)
