@@ -1,110 +1,40 @@
-"""Tests for connector objects defined in the ``connectors`` module"""
+"""Tests for the ``Connector`` class"""
 
+import time
 from unittest import TestCase
 
-from egon import exceptions
-from egon.connectors import Connector, Input, Output
-from tests.mock import MockSource, MockTarget
+from egon.connectors import AbstractConnector
 
 
-class InstanceConnections(TestCase):
-    """Test the connection of generic connector objects to other"""
+class QueueProperties(TestCase):
+    """Test  test the exposure of queue properties by the overlying ``Connector`` class"""
 
     def setUp(self) -> None:
-        """Define a generic ``Connector`` instance"""
+        """Create a ``DataStore`` instance"""
 
-        self.connector = Connector()
+        self.data_store = AbstractConnector(maxsize=1)
 
-    def test_overwrite_error_on_connection_overwrite(self) -> None:
-        """An error is raised when trying to overwrite an existing connection"""
+    def test_size_matches_queue_size(self) -> None:
+        """Test the ``size`` method returns the size of the queue`"""
 
-        self.connector.connect(Input())
-        with self.assertRaises(exceptions.OverwriteConnectionError):
-            self.connector.connect(Input())
+        self.assertEqual(self.data_store.size(), 0)
+        self.data_store._queue.put(1)
+        self.assertEqual(self.data_store.size(), 1)
 
-    def test_overwrite_error_on_connected_argument(self) -> None:
-        """An error is raised when trying to connect to a connector with an established connection"""
+    def test_full_state(self) -> None:
+        """Test the ``full`` method returns the state of the queue"""
 
-        input_connector = Input()
-        output_connector = Output()
-        input_connector.connect(output_connector)
+        self.assertFalse(self.data_store.full())
+        self.data_store._queue.put(1)
+        self.assertTrue(self.data_store.full())
 
-        with self.assertRaises(exceptions.OverwriteConnectionError):
-            self.connector.connect(input_connector)
+    def test_empty_state(self) -> None:
+        """Test the ``empty`` method returns the state of the queue"""
 
-    def test_connected_instances_share_queue(self) -> None:
-        """Test two connected instances share the same memory queue"""
+        self.assertTrue(self.data_store.empty())
+        self.data_store._queue.put(1)
 
-        input_connector = Input()
-        output_connector = Output()
-        input_connector.connect(output_connector)
-        self.assertIs(input_connector._queue, output_connector._queue)
+        # The value of Queue.empty() updates asynchronously
+        time.sleep(1)
 
-    def test_is_connected_boolean(self) -> None:
-        """The ``is_connected`` method returns the current connection state"""
-
-        input_connector = Input()
-        self.assertFalse(input_connector.is_connected())
-        input_connector.connect(Output())
-        self.assertTrue(input_connector.is_connected())
-
-    def test_error_on_connection_to_same_type(self) -> None:
-        """An error is raised when connecting two inputs together"""
-
-        with self.assertRaises(ValueError):
-            Connector().connect(Connector())
-
-
-class PartnerMapping(TestCase):
-    """Test connectors with an established connection correctly map to neighboring connectors/nodes"""
-
-    def setUp(self) -> None:
-        """Create two connected pipeline elements"""
-
-        self.target = MockTarget()
-        self.input_connector = self.target.input
-        self.output_connector = MockSource().output
-        self.output_connector.connect(self.input_connector)
-
-    def test_is_aware_of_partner(self) -> None:
-        """Test connectors map to the correct partner connector"""
-
-        self.assertIs(self.input_connector.partner, self.output_connector)
-
-    def test_is_aware_of_parent(self) -> None:
-        """Test connectors map to their partner"""
-
-        self.assertIs(self.input_connector.parent_node, self.target)
-
-
-class InstanceDisconnect(TestCase):
-    """Test the disconnection of two connectors"""
-
-    def setUp(self) -> None:
-        """Define an ``Input`` instance"""
-
-        self.input = Input()
-        self.output = Output()
-        self.input.connect(self.output)
-
-    def test_queue_is_rewritten(self) -> None:
-        """Test connectors revert to having individual queues"""
-
-        original_queue = self.input._queue
-        self.input.disconnect()
-        self.assertIsNot(self.input._queue, original_queue)
-        self.assertIsNot(self.output._queue, original_queue)
-        self.assertIsNot(self.input._queue, self.output._queue)
-
-    def test_both_connectors_are_disconnected(self) -> None:
-        """Test calling disconnect from one connector results in both connectors being disconnected"""
-
-        self.input.disconnect()
-        self.assertFalse(self.input.is_connected())
-        self.assertFalse(self.output.is_connected())
-
-    @staticmethod
-    def test_no_error_on_successive_disconnect() -> None:
-        """Test no errors are raised when disconnecting an instance with no connection"""
-
-        Input().disconnect()
+        self.assertFalse(self.data_store.empty())
