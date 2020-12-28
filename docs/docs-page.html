@@ -306,6 +306,13 @@ etl_pipeline = ETL()
 etl_pipeline.validate()
 etl_pipeline.run()
                         </code></pre>
+
+                        <div class="alert alert-primary" role="alert">
+                            In the above example each output connector is connected to a single input connector.
+                            In general, an output connector can only connect to a single output.
+                            However, multiple output connectors can connect to a single input.
+                            This allows you to consolidate data from multiple nodes into a single input.
+                        </div>
                     </section><!--//section-->
                 </article><!--//docs-article-->
 
@@ -364,6 +371,10 @@ class AddingPipeline(Pipeline):
         self.generate_numbers = generate_numbers
         self.add = add
         self.print_sum = print_sum
+
+        # Nodes run on a single forked process by default.
+        # Additional processes can be allocated for higher performance
+        self.add.num_processes = 4
 
         self.generate_numbers.output.connect(self.add.input)
         self.add.output.connect(self.print_sum.input)

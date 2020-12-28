@@ -1,3 +1,21 @@
+# OS Files
+*.DS_Store
+
+# IDE files
 .idea/
+
+# Python build files
+*__pycache__*
+*.pyc
+.eggs/
+*.egg-info/
+build/
+dist/
+
+# Built Docs
+docs/build
 *.scssc
 *.css.map
+docs/assets/fontawesome/scss/*.css
+docs/assets/scss/*.css
+docs/assets/scss/bootstrap/scss/*.css
