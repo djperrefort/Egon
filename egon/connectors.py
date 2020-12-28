@@ -10,7 +10,7 @@ from __future__ import annotations
 import abc
 import multiprocessing as mp
 from queue import Empty
-from typing import Any, Optional, TYPE_CHECKING, Iterable, List
+from typing import Any, Optional, TYPE_CHECKING, Iterable, List, Collection
 
 from . import exceptions
 from .exceptions import MissingConnectionError
@@ -23,7 +23,7 @@ class KillSignal:
     """Used to indicate that a process should exit"""
 
 
-class Collection:
+class ObjectCollection:
     """Collection of objects with O(1) add and remove"""
 
     def __init__(self, data: Optional[Collection] = None) -> None:
@@ -136,7 +136,7 @@ class Input(AbstractConnector):
         """
 
         super().__init__(name, maxsize)
-        self._connected_partners = Collection()  # Tracks connector objects that feed into the input
+        self._connected_partners = ObjectCollection()  # Tracks connector objects that feed into the input
 
     @property
     def is_connected(self) -> bool:
