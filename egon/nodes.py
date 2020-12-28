@@ -156,7 +156,7 @@ class AbstractNode(abc.ABC):
             if not input_connector.empty():
                 return True
 
-            for partner in input_connector._connected_partners:
+            for partner in input_connector.get_partners():
                 if not partner.parent_node.node_finished:
                     return True
 
