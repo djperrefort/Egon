@@ -3,7 +3,7 @@ from unittest import TestCase
 from egon import exceptions
 from egon.connectors import Input, Output
 from egon.exceptions import MissingConnectionError
-from tests.mock import MockSource, MockTarget
+from egon.mock import MockSource, MockTarget
 
 
 class InstanceConnections(TestCase):

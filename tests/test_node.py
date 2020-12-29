@@ -1,7 +1,7 @@
 from functools import partial
 from unittest import TestCase
 
-from . import mock
+from egon import mock
 
 
 class ProcessAllocation(TestCase):

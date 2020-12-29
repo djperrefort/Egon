@@ -1,10 +1,9 @@
-from egon.connectors import KillSignal, Input, Output
-
 """Tests for connector objects defined in the ``connectors`` module"""
 
 from unittest import TestCase
 
-from tests.mock import MockSource, MockTarget
+from egon.connectors import KillSignal, Input, Output
+from egon.mock import MockSource, MockTarget
 
 
 class InstanceConnections(TestCase):
