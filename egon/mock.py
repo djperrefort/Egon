@@ -1,3 +1,8 @@
+"""The ``mock`` module defines prebuilt pipeline nodes for developing
+unittests. Instead of accomplishing a user defined action, mock nodes sleep
+for a pre-defined number of seconds.
+"""
+
 from asyncio import sleep
 
 from egon import nodes
@@ -28,7 +33,7 @@ class MockTarget(nodes.Target):
     def action(self) -> None:
         """Placeholder function to satisfy requirements of abstract parent"""
 
-        sleep(100)
+        sleep(10)
 
 
 class MockNode(nodes.Node):

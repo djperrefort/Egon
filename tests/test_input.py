@@ -1,10 +1,9 @@
-from egon.connectors import KillSignal, Input, Output
-
-"""Tests for connector objects defined in the ``connectors`` module"""
-
+"""Tests the connectivity and functionality of ``Input`` connector objects."""
+from asyncio import sleep
 from unittest import TestCase
 
-from tests.mock import MockSource, MockTarget
+from egon.connectors import KillSignal, Input, Output
+from egon.mock import MockSource, MockTarget
 
 
 class InstanceConnections(TestCase):
@@ -22,6 +21,16 @@ class InstanceConnections(TestCase):
         self.assertFalse(self.input_connector.is_connected)
         self.output_connector.connect(self.input_connector)
         self.assertTrue(self.input_connector.is_connected)
+
+    def test_queue_size_change(self) -> None:
+        """Test connected outputs point at the correct input queue after changing the queue size"""
+
+        input = Input(maxsize=10)
+        output = Output()
+        output.connect(input)
+
+        input.maxsize = 5
+        self.assertIs(input._queue, output._queue)
 
 
 class PartnerMapping(TestCase):
@@ -111,3 +120,35 @@ class InputIterGet(TestCase):
         test_val = 'test_val'
         self.target.input._queue.put(test_val)
         self.assertEqual(next(self.target.input.iter_get()), test_val)
+
+
+class MaxQueueSize(TestCase):
+    """Tests the setting/getting of the maximum size for the underlying queue"""
+
+    def setUp(self) -> None:
+        self.connector = Input(maxsize=10)
+
+    def test_maxsize(self) -> None:
+        """Test the max queue size is set at __init__"""
+
+        self.assertEqual(self.connector._queue._maxsize, self.connector.maxsize)
+
+    def test_set_at_init(self) -> None:
+        """Test the max queue size is set at __init__"""
+
+        self.assertEqual(10, self.connector.maxsize)
+
+    def test_changed_via_setter(self) -> None:
+        """Test the size of the underlying queue is changed when setting the ``maxsize`` attribute"""
+
+        self.connector.maxsize = 5
+        self.assertEqual(5, self.connector.maxsize)
+
+    def test_error_on_nonempty_queue(self) -> None:
+        """Test a ``RuntimeError`` is raised when changing the size of a nonempty connector"""
+
+        self.connector._queue.put(1)
+        sleep(1)  # Let the queue update
+
+        with self.assertRaises(RuntimeError):
+            self.connector.maxsize += 1

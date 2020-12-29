@@ -60,16 +60,17 @@ class ObjectCollection:
         """
 
         index = self._index_map[x]
-        del self._index_map[x]
 
         # Swap element with last element so that removal from the list can be done in O(1) time
         size = len(self._object_list)
         last = self._object_list[size - 1]
         self._object_list[index], self._object_list[size - 1] = self._object_list[size - 1], self._object_list[index]
-        del self._object_list[-1]
 
         # Update hash table for new index of last element
         self._index_map[last] = index
+
+        del self._index_map[x]
+        del self._object_list[-1]
 
     def __iter__(self) -> Iterable:
         return iter(self._object_list)
@@ -139,6 +140,29 @@ class Input(AbstractConnector):
 
         super().__init__(name, maxsize)
         self._connected_partners = ObjectCollection()  # Tracks connector objects that feed into the input
+
+    @property
+    def maxsize(self) -> int:
+        """The maximum number of objects to store in the connector's memory
+
+        Once the maximum size is reached, the ``put`` method will block until
+        an item is moved from the connector into the node.
+        """
+
+        return self._queue._maxsize
+
+    @maxsize.setter
+    def maxsize(self, maxsize: int) -> None:
+        """Replaces the underlying queue with a new instance and updated
+        connected outputs to point at that new instance.
+        """
+
+        if not self.empty():
+            raise RuntimeError('Cannot change maximum connector size when the connector is not empty.')
+
+        self._queue = mp.Queue(maxsize=maxsize)
+        for partner in self._connected_partners:
+            partner._queue = self._queue
 
     @property
     def is_connected(self) -> bool:

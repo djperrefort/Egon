@@ -1,7 +1,9 @@
+"""Tests for the class based construction of pipeline nodes."""
+
 from functools import partial
 from unittest import TestCase
 
-from . import mock
+from egon import mock
 
 
 class ProcessAllocation(TestCase):
@@ -30,6 +32,19 @@ class ProcessAllocation(TestCase):
         node._processes[0].start()
         with self.assertRaises(RuntimeError):
             node.num_processes = 1
+
+    def test_error_on_negative_processes(self) -> None:
+        """Assert a value error is raised when the ``num_processes`` attribute is set to a negative"""
+
+        node = mock.MockNode(1)
+        with self.assertRaises(ValueError):
+            node.num_processes = -1
+
+    def test_error_on_negative_processes_at_init(self) -> None:
+        """Assert a value error is raised when a node is instantiated with a negative number"""
+
+        with self.assertRaises(ValueError):
+            mock.MockNode(-1)
 
 
 class Execution(TestCase):

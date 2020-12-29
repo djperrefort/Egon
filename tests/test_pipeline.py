@@ -5,9 +5,9 @@ from unittest import TestCase
 
 from egon.connectors import Output
 from egon.exceptions import OrphanedNodeError, MissingConnectionError
+from egon.mock import MockSource, MockNode, MockPipeline
 from egon.nodes import Node
 from egon.pipeline import Pipeline
-from tests.mock import MockSource, MockNode, MockPipeline
 
 
 class StartStopCommands(TestCase):

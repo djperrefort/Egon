@@ -1,3 +1,5 @@
+"""Tests the creation of pipeline nodes using function decorators."""
+
 import inspect
 from typing import Type
 from unittest import TestCase, skip
