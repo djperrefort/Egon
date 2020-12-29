@@ -290,6 +290,11 @@ class ETL(Pipeline):
         self.transform = Transform(num_processes=4)  # Allocate multiple processes
         self.load = Load()
 
+        # Limit the number of objects the input connector is allowed to store in memory
+        # This will limit memory usage and force the ``extract`` node to wait
+        # for the ``transform`` node to catch up if it falls behind.
+        self.transform.data_in.maxsize = 100
+
         # Connect each of the nodes together
         self.extract.data_out.connect(self.transform.data_in)
         self.transform.data_out.connect(self.load.data_in)
