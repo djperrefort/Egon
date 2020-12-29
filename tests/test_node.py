@@ -33,6 +33,19 @@ class ProcessAllocation(TestCase):
         with self.assertRaises(RuntimeError):
             node.num_processes = 1
 
+    def test_error_on_negative_processes(self) -> None:
+        """Assert a value error is raised when the ``num_processes`` attribute is set to a negative"""
+
+        node = mock.MockNode(1)
+        with self.assertRaises(ValueError):
+            node.num_processes = -1
+
+    def test_error_on_negative_processes_at_init(self) -> None:
+        """Assert a value error is raised when a node is instantiated with a negative number"""
+
+        with self.assertRaises(ValueError):
+            mock.MockNode(-1)
+
 
 class Execution(TestCase):
     """Test the execution of tasks assigned to a Node instance"""

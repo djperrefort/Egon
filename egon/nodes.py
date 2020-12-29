@@ -41,6 +41,9 @@ class AbstractNode(abc.ABC):
     def __init__(self, num_processes=1) -> None:
         """Represents a single pipeline node"""
 
+        if num_processes < 0:
+            raise ValueError(f'Cannot instantiate a negative number of forked processes (got {num_processes}).')
+
         # Note that we use the memory address and not the ``pid`` attribute.
         # ``pid`` is only set after the process is started
         self._processes = [mp.Process(target=self.execute) for _ in range(num_processes)]
@@ -59,6 +62,9 @@ class AbstractNode(abc.ABC):
     @num_processes.setter
     def num_processes(self, num_processes) -> None:
         """The number of processes assigned to the current node"""
+
+        if num_processes < 0:
+            raise ValueError(f'Cannot instantiate a negative number of forked processes (got {num_processes}).')
 
         if any(p.is_alive() for p in self._processes):
             raise RuntimeError('Cannot change number of processes while node is running.')
