@@ -60,16 +60,17 @@ class ObjectCollection:
         """
 
         index = self._index_map[x]
-        del self._index_map[x]
 
         # Swap element with last element so that removal from the list can be done in O(1) time
         size = len(self._object_list)
         last = self._object_list[size - 1]
         self._object_list[index], self._object_list[size - 1] = self._object_list[size - 1], self._object_list[index]
-        del self._object_list[-1]
 
         # Update hash table for new index of last element
         self._index_map[last] = index
+
+        del self._index_map[x]
+        del self._object_list[-1]
 
     def __iter__(self) -> Iterable:
         return iter(self._object_list)
