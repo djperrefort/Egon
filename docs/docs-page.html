@@ -97,7 +97,7 @@
                         <h2 class="section-heading">Installation</h2>
                         <p>
                             Egon is open-source and free to use (although attribution is both appreciated and encouraged where appropriate).
-                            You can install the Python Egon Framework using pip:
+                            You can install the <code>egon</code> package using pip:
                         </p>
                         <pre class="shadow-lg rounded"><code class="bash">
 pip install egon
@@ -116,7 +116,7 @@ python setup.py install --user
                         <h2 class="section-heading">How it Works</h2>
                         <p>
                             Egon works by breaking down your analysis into discrete, reusable units.
-                            Those units can then be assembled, tested, and deployed as a single coherent pipeline.
+                            Those units can then be tested individual before being assembled and deployed as a single coherent pipeline.
                             Consider for a moment the classic example of an ETL pipeline:
                         </p>
                         <img class="figure-img img-fluid rounded" src="assets/images/etl.svg" alt="" style="width: 60%;">
@@ -129,7 +129,7 @@ python setup.py install --user
                         <p>
                             <code>Node</code> objects can be connected in any order and are designed to run asynchronously.
                             This means you can scale your analysis by allocating additional processes to each node.
-                            Nodes are also smart enough to automatically exit once they are no longer needed.
+                            Nodes are also smart enough to automatically exit once they are no longer needed, freeing up resources on the host machine once they are no longer needed.
                         </p>
                     </section><!--//section-->
                 </article>
@@ -144,8 +144,6 @@ python setup.py install --user
                             The first step in building a pipeline is to define the necessary nodes.
                             Ideally, each node should reflect a single independent task.
                             When processing a fixed amount of information, nodes should also be able to shutdown automatically once there is no more data for them to process.
-                        </p>
-                        <p>
                             Let's continue from the ETL example shown above.
                         </p>
                     </section>
@@ -219,7 +217,7 @@ class Load(Target):
     data_input = Input()
 
     # The rest of the class should include the same
-    # ``setup``, ``action``, and ``teardown`` structure from earlier.
+    # ``setup``, ``action``, and ``teardown`` style structure from earlier.
     ...
                         </code></pre>
 
@@ -268,7 +266,7 @@ class Transform(Node):
     data_out = Output()
 
     # The rest of the class should include the same
-    # ``setup``, ``action``, and ``teardown`` structure from earlier.
+    # ``setup``, ``action``, and ``teardown`` style structure from earlier.
     ...
                     </code></pre>
                     </section><!--//section-->
@@ -373,7 +371,7 @@ class AddingPipeline(Pipeline):
         self.print_sum = print_sum
 
         # Nodes run on a single forked process by default.
-        # Additional processes can be allocated for higher performance
+        # Additional processes can be allocated for higher performance.
         self.add.num_processes = 4
 
         self.generate_numbers.output.connect(self.add.input)
