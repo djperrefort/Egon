@@ -22,6 +22,16 @@ class InstanceConnections(TestCase):
         self.output_connector.connect(self.input_connector)
         self.assertTrue(self.input_connector.is_connected)
 
+    def test_queue_size_change(self) -> None:
+        """Test connected outputs point at the correct input queue after changing the queue size"""
+
+        input = Input(maxsize=10)
+        output = Output()
+        output.connect(input)
+
+        input.max_size = 5
+        self.assertIs(input._queue, output._queue)
+
 
 class PartnerMapping(TestCase):
     """Test connectors with an established connection correctly map to neighboring connectors/nodes"""
