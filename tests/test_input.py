@@ -29,7 +29,7 @@ class InstanceConnections(TestCase):
         output = Output()
         output.connect(input)
 
-        input.max_size = 5
+        input.maxsize = 5
         self.assertIs(input._queue, output._queue)
 
 
@@ -120,3 +120,26 @@ class InputIterGet(TestCase):
         test_val = 'test_val'
         self.target.input._queue.put(test_val)
         self.assertEqual(next(self.target.input.iter_get()), test_val)
+
+
+class MaxQueueSize(TestCase):
+    """Tests the setting/getting of the maximum size for the underlying queue"""
+
+    def test_maxsize(self) -> None:
+        """Test the max queue size is set at __init__"""
+
+        connector = Input(maxsize=10)
+        self.assertEqual(connector._queue._maxsize, connector.maxsize)
+
+    def test_set_at_init(self) -> None:
+        """Test the max queue size is set at __init__"""
+
+        connector = Input(maxsize=10)
+        self.assertEqual(10, connector.maxsize)
+
+    def test_changed_via_setter(self) -> None:
+        """Test the size of the underlying queue is changed when setting the ``maxsize`` attribute"""
+
+        connector = Input(maxsize=10)
+        connector.maxsize = 5
+        self.assertEqual(5, connector.maxsize)

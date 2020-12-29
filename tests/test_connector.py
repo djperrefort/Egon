@@ -38,26 +38,3 @@ class QueueProperties(TestCase):
         time.sleep(1)
 
         self.assertFalse(self.connector.empty())
-
-    def test_maxsize(self) -> None:
-        """Test the max queue size is set at __init__"""
-
-        connector = AbstractConnector(maxsize=10)
-        self.assertEqual(connector._queue._maxsize, connector.max_size)
-
-
-class MaxQueueSize(TestCase):
-    """Tests the setting/getting of the maximum size for the underlying queue"""
-
-    def test_set_at_init(self) -> None:
-        """Test the max queue size is set at __init__"""
-
-        connector = AbstractConnector(maxsize=10)
-        self.assertEqual(10, connector.max_size)
-
-    def test_changed_via_setter(self) -> None:
-        """Test the size of the underlying queue is changed when setting the ``max_size`` attribute"""
-
-        connector = AbstractConnector(maxsize=10)
-        connector.max_size = 5
-        self.assertEqual(5, connector.max_size)

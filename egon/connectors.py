@@ -141,7 +141,7 @@ class Input(AbstractConnector):
         self._connected_partners = ObjectCollection()  # Tracks connector objects that feed into the input
 
     @property
-    def max_size(self) -> int:
+    def maxsize(self) -> int:
         """The maximum number of objects to store in the connector's memory
 
         Once the maximum size is reached, the ``put`` method will block until
@@ -150,8 +150,8 @@ class Input(AbstractConnector):
 
         return self._queue._maxsize
 
-    @max_size.setter
-    def max_size(self, maxsize: int) -> None:
+    @maxsize.setter
+    def maxsize(self, maxsize: int) -> None:
         """Replaces the underlying queue with a new instance and updated
         connected outputs to point at that new instance.
         """
