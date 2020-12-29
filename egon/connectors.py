@@ -157,6 +157,9 @@ class Input(AbstractConnector):
         connected outputs to point at that new instance.
         """
 
+        if not self.empty():
+            raise RuntimeError('Cannot change maximum connector size when the connector is not empty.')
+
         self._queue = mp.Queue(maxsize=maxsize)
         for partner in self._connected_partners:
             partner._queue = self._queue

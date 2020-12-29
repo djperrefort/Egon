@@ -1,5 +1,5 @@
 """Tests the connectivity and functionality of ``Input`` connector objects."""
-
+from asyncio import sleep
 from unittest import TestCase
 
 from egon.connectors import KillSignal, Input, Output
@@ -125,21 +125,30 @@ class InputIterGet(TestCase):
 class MaxQueueSize(TestCase):
     """Tests the setting/getting of the maximum size for the underlying queue"""
 
+    def setUp(self) -> None:
+        self.connector = Input(maxsize=10)
+
     def test_maxsize(self) -> None:
         """Test the max queue size is set at __init__"""
 
-        connector = Input(maxsize=10)
-        self.assertEqual(connector._queue._maxsize, connector.maxsize)
+        self.assertEqual(self.connector._queue._maxsize, self.connector.maxsize)
 
     def test_set_at_init(self) -> None:
         """Test the max queue size is set at __init__"""
 
-        connector = Input(maxsize=10)
-        self.assertEqual(10, connector.maxsize)
+        self.assertEqual(10, self.connector.maxsize)
 
     def test_changed_via_setter(self) -> None:
         """Test the size of the underlying queue is changed when setting the ``maxsize`` attribute"""
 
-        connector = Input(maxsize=10)
-        connector.maxsize = 5
-        self.assertEqual(5, connector.maxsize)
+        self.connector.maxsize = 5
+        self.assertEqual(5, self.connector.maxsize)
+
+    def test_error_on_nonempty_queue(self) -> None:
+        """Test a ``RuntimeError`` is raised when changing the size of a nonempty connector"""
+
+        self.connector._queue.put(1)
+        sleep(1)  # Let the queue update
+
+        with self.assertRaises(RuntimeError):
+            self.connector.maxsize += 1
