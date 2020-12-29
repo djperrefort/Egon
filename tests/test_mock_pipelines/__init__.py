@@ -1,3 +1,3 @@
-"""This directory contains fully functional pipelines that test the
+"""This directory contains prebuilt analysis pipelines for testing the
 end-to-end throughput of data through interconnected nodes.
 """

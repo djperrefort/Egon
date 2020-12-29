@@ -1,3 +1,5 @@
+"""Tests for the class based construction of pipeline nodes."""
+
 from functools import partial
 from unittest import TestCase
 

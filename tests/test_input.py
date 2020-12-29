@@ -1,4 +1,4 @@
-"""Tests for connector objects defined in the ``connectors`` module"""
+"""Tests the connectivity and functionality of ``Input`` connector objects."""
 
 from unittest import TestCase
 

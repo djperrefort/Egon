@@ -1,3 +1,5 @@
+"""Tests the connectivity and functionality of ``Input`` connector objects."""
+
 from unittest import TestCase
 
 from egon import exceptions

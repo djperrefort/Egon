@@ -1,3 +1,5 @@
+"""Tests the validation processes of pipelione nodes"""
+
 from unittest import TestCase, skip
 
 from egon import exceptions
