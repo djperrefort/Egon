@@ -11,9 +11,9 @@ from egon.pipeline import Pipeline
 class MockSource(nodes.Source):
     """A ``Source`` subclass that implements placeholder functions for abstract methods"""
 
-    def __init__(self, load_data: list = None, num_processes=1) -> None:
+    def __init__(self, load_data: list = None, num_processes=0) -> None:
         self.output = Output()
-        self.load_data = load_data
+        self.load_data = load_data or []
         super(MockSource, self).__init__(num_processes)
 
     def action(self) -> None:
@@ -26,7 +26,7 @@ class MockSource(nodes.Source):
 class MockTarget(nodes.Target):
     """A ``Target`` subclass that implements placeholder functions for abstract methods"""
 
-    def __init__(self, num_processes=1) -> None:
+    def __init__(self, num_processes=0) -> None:
         self.input = Input()
         self.accumulated_data = []
         super(MockTarget, self).__init__(num_processes)
@@ -41,7 +41,7 @@ class MockTarget(nodes.Target):
 class MockNode(nodes.Node):
     """A ``Node`` subclass that implements placeholder functions for abstract methods"""
 
-    def __init__(self, num_processes=1) -> None:
+    def __init__(self, num_processes=0) -> None:
         self.output = Output()
         self.input = Input()
         super(MockNode, self).__init__(num_processes)
