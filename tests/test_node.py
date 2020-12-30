@@ -28,7 +28,7 @@ class ProcessAllocation(TestCase):
     def test_error_if_processes_are_alive(self) -> None:
         """Test a RuntimeError is raised when trying to reallocate processes on a running node"""
 
-        node = mock.MockNode()
+        node = mock.MockNode(num_processes=1)
         node._processes[0].start()
         with self.assertRaises(RuntimeError):
             node.num_processes = 1
@@ -53,7 +53,7 @@ class Execution(TestCase):
     def setUp(self) -> None:
         """Create a testing node that tracks the execution method of it's methods"""
 
-        self.node = mock.MockNode()
+        self.node = mock.MockNode(num_processes=1)
 
         # Track the call order of node functions
         self.call_list = []
