@@ -3,8 +3,6 @@ unittests. Instead of accomplishing a user defined action, mock nodes sleep
 for a pre-defined number of seconds.
 """
 
-from asyncio import sleep
-
 from egon import nodes
 from egon.connectors import Input, Output
 from egon.pipeline import Pipeline
@@ -13,33 +11,37 @@ from egon.pipeline import Pipeline
 class MockSource(nodes.Source):
     """A ``Source`` subclass that implements placeholder functions for abstract methods"""
 
-    def __init__(self, num_processes=1) -> None:
+    def __init__(self, load_data: list = None, num_processes=0) -> None:
         self.output = Output()
+        self.load_data = load_data or []
         super(MockSource, self).__init__(num_processes)
 
     def action(self) -> None:
         """Placeholder function to satisfy requirements of abstract parent"""
 
-        sleep(10)
+        for x in self.load_data:
+            self.output.put(x)
 
 
 class MockTarget(nodes.Target):
     """A ``Target`` subclass that implements placeholder functions for abstract methods"""
 
-    def __init__(self, num_processes=1) -> None:
+    def __init__(self, num_processes=0) -> None:
         self.input = Input()
+        self.accumulated_data = []
         super(MockTarget, self).__init__(num_processes)
 
     def action(self) -> None:
         """Placeholder function to satisfy requirements of abstract parent"""
 
-        sleep(10)
+        for x in self.input.iter_get():
+            self.accumulated_data.append(x)
 
 
 class MockNode(nodes.Node):
     """A ``Node`` subclass that implements placeholder functions for abstract methods"""
 
-    def __init__(self, num_processes=1) -> None:
+    def __init__(self, num_processes=0) -> None:
         self.output = Output()
         self.input = Input()
         super(MockNode, self).__init__(num_processes)
@@ -47,7 +49,8 @@ class MockNode(nodes.Node):
     def action(self) -> None:
         """Placeholder function to satisfy requirements of abstract parent"""
 
-        sleep(10)
+        for x in self.input.iter_get():
+            self.output.put(x)
 
 
 class MockPipeline(Pipeline):
