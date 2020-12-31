@@ -67,6 +67,10 @@
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-node-validation">Node Validation</a></li>
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-pipeline-validation">Pipeline Validation</a></li>
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-connector-errors">Connector Errors</a></li>
+                    <li class="nav-item section-title"><a class="nav-link scrollto active" href="#section-mock"><span class="theme-icon-holder mr-2"><i class="fas fa-tasks"></i></span>Unit Testing</a></li>
+                    <li class="nav-item"><a class="nav-link scrollto" href="#item-mock-source">MockSource</a></li>
+                    <li class="nav-item"><a class="nav-link scrollto" href="#item-mock-target">MockTarget</a></li>
+                    <li class="nav-item"><a class="nav-link scrollto" href="#item-mock-node">MockNode</a></li>
                     <li class="nav-item section-title"><a class="nav-link scrollto active" href="#section-FAQ"><span class="theme-icon-holder mr-2"><i class="fas fa-question-circle"></i></span>FAQ</a></li>
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-general-questions">General Questions</a></li>
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-parallel-processing">Parallel Processing</a></li>
@@ -173,10 +177,14 @@ from egon.nodes import Source
 # Nodes are represented as classes that inherit from the egon.nodes module
 class Extract(Source):
 
-    # Here we define an output connector for the class
-    # This allows the node to send data further down the pipeline
-    # For more complicated nodes, you can define as many connectors as needed.
-    data_output = Output()
+    def __init__(self, num_processes=1):
+        """The extract step of an ETL style pipeline"""
+
+        # Here we define an output connector for the class
+        # This allows the node to send data further down the pipeline
+        # For more complicated nodes, you can define as many connectors as needed.
+        data_output = Output()
+        super.__init__(num_processes)
 
     def setup(self):
         """Setup tasks are optional and can be used to configure a pipeline node"""
@@ -212,9 +220,13 @@ from egon.nodes import Target
 
 class Load(Target):
 
-    # Here we define an input connector for the class
-    # This allows the node to receive data from other nodes
-    data_input = Input()
+    def __init__(self, num_processes=1):
+        """The load step of an ETL style pipeline"""
+
+        # Here we define an input connector for the class
+        # This allows the node to receive data from other nodes
+        data_input = Input()
+        super().__init__(num_processes)
 
     # The rest of the class should include the same
     # ``setup``, ``action``, and ``teardown`` style structure from earlier.
@@ -232,7 +244,12 @@ from egon.nodes import Target
 
 
 class Load(Target):
-    data_input = Input()
+
+    def __init__(self, num_processes=1):
+        """The load step of an ETL style pipeline"""
+
+        data_input = Input()
+        super().__init__(num_processes)
 
     def action(self):
         """Load data into a directory"""
@@ -259,11 +276,16 @@ from egon.nodes import Node
 
 class Transform(Node):
 
-    # ``Node`` subclasses can have an arbitrary number of input AND output connectors.
-    # Here we define an input AND output connectors for the class
-    # This allows the node to communicate with upstream and downstream nodes
-    data_in = Input()
-    data_out = Output()
+    def __init__(self, num_processes=1):
+        """The transform step of an ETL style pipeline"""
+
+        # ``Node`` subclasses can have an arbitrary number of input AND output connectors.
+        # Here we define an input AND output connectors for the class
+        # This allows the node to communicate with upstream and downstream nodes
+        self.data_in = Input()
+        self.data_out = Output()
+        super().__init__(num_processes)
+
 
     # The rest of the class should include the same
     # ``setup``, ``action``, and ``teardown`` style structure from earlier.
@@ -298,6 +320,7 @@ class ETL(Pipeline):
         # Connect each of the nodes together
         self.extract.data_out.connect(self.transform.data_in)
         self.transform.data_out.connect(self.load.data_in)
+        super().__init__()  # Super should be AFTER the pipeline node attributes have been defined
                         </code></pre>
                         <p>
                             The <code>validate</code> task handles process allocation and runs automated validation tasks (see the documentation below).
