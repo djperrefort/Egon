@@ -66,7 +66,6 @@
                     <li class="nav-item section-title"><a class="nav-link scrollto active" href="#section-validation"><span class="theme-icon-holder mr-2"><i class="fas fa-check-circle"></i></span>Pipeline Validation</a></li>
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-node-validation">Node Validation</a></li>
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-pipeline-validation">Pipeline Validation</a></li>
-                    <li class="nav-item"><a class="nav-link scrollto" href="#item-connector-errors">Connector Errors</a></li>
                     <li class="nav-item section-title"><a class="nav-link scrollto active" href="#section-mock"><span class="theme-icon-holder mr-2"><i class="fas fa-tasks"></i></span>Unit Testing</a></li>
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-mock-source">MockSource</a></li>
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-mock-target">MockTarget</a></li>
@@ -172,7 +171,6 @@ python setup.py install --user
                         <p>
                             <code>Source</code> type nodes are special in that they have no incoming pipeline connections and can only produce data.
                             This makes them ideal for the <b>extract</b> task.
-
                         </p>
                         <p>
                             We build the extract node as a class that inherits from the <code>Source</code> class.
@@ -193,8 +191,8 @@ class Extract(Source):
         # Here we define an output connector for the class
         # This allows the node to send data further down the pipeline
         # For more complicated nodes, you can define as many connectors as needed.
-        data_output = Output()
-        super.__init__(num_processes)
+        self.data_output = Output()
+        super().__init__(num_processes)
 
     def setup(self):
         """Setup tasks are optional and can be used to configure a pipeline node"""
@@ -235,7 +233,7 @@ class Load(Target):
 
         # Here we define an input connector for the class
         # This allows the node to receive data from other nodes
-        data_input = Input()
+        self.data_input = Input()
         super().__init__(num_processes)
 
     # The rest of the class should include the same
@@ -258,7 +256,7 @@ class Load(Target):
     def __init__(self, num_processes=1):
         """The load step of an ETL style pipeline"""
 
-        data_input = Input()
+        self.data_input = Input()
         super().__init__(num_processes)
 
     def action(self):
@@ -513,23 +511,6 @@ my_pipeline.run()
 						    </code></pre>
                         </section><!--//docs-intro-->
 
-                        <section class="docs-section" id="item-connector-errors">
-                            <h2 class="section-heading">Connector Errors</h2>
-                            <p>
-                                Data should only ever flow through a pipeline in one direction.
-                                <code>Egon</code> enforces this principle through a signal/slot style design.
-                                To prevent against circular data flow, input connectors can only ever connect to output connectors (and visa/versa).
-                            </p>
-                            <pre class="shadow-lg rounded"><code class="python">
-from egon.connectors import Input
-
-input_1 = Input()
-input_2 = Input()
-input_1.connect(input_2)
-
-# Raises: ValueError: Cannot join together two connection objects of the same type.
-						    </code></pre>
-                        </section><!--//docs-intro-->
                     </header><!--//docs-header-->
 
                 </article><!--//docs-article-->
@@ -568,11 +549,23 @@ input_1.connect(input_2)
                 <section class="docs-intro" id="item-mock-source">
                     <h2 class="section-heading">MockSource</h2>
                     <p>
-                        <code>MockSource</code> objects allow you to easily load data into a series of interconnected nodes.
+                        <code>MockSource</code> objects allow you to easily load data into a connected, downstream node.
                         Any data stored in the <code>load_data</code> attribute will be sent to the <code>output</code> connector when the node executes.
                     </p>
                     <pre class="shadow-lg rounded"><code class="bash">
+from egon.mock import MockSource
 
+# You can define the data to load at instantiation
+mock_source = MockSource(load_data=[1, 2, 3])
+
+# You can also modify the list after instantiation
+mock_source.load_data.append(4)
+
+# Any objects you specify in ``load_data`` is sent to the ``output`` connector
+mock_source.output.connect(my_node_to_test.input)
+
+mock_source.execute()
+my_node_to_test.execute()
 						</code></pre>
                 </section><!--//section-->
 
@@ -583,17 +576,50 @@ input_1.connect(input_2)
                         When executed they collect any data passed to their <code>input</code> connector attribute into a list.
                     </p>
                     <pre class="shadow-lg rounded"><code class="bash">
+from egon.mock import MockTarget
 
+# Once executed, the mock target will accumulate any data sent to it's input connector
+mock_target = MockTarget()
+my_node_to_test.output.connect(mock_target.input)
+
+my_node_to_test.execute()
+mock_target.execute()
+
+# The mock target will store data in the ``accumulated_data`` list
+first_value = mock_target.accumulated_data[0]
 						</code></pre>
                 </section><!--//section-->
 
                 <section class="docs-intro" id="item-testing-example">
                     <h2 class="section-heading">Testing Example</h2>
                     <p>
-                        Using the <code>unittest</code> testing framework, we outline an example set of tests beolw:
+                        Using the <code>unittest</code> testing framework, we outline an example test below.
                     </p>
                     <pre class="shadow-lg rounded"><code class="bash">
+from unittest import TestCase
 
+from egon.mock import MockSource, MockTarget
+
+
+class MyTestClass(TestCase):
+
+    def setUp(self) -> None:
+        """Define and setup the nodes used in the test suite"""
+
+        # Create the nodes to be used in testing
+        self.source = MockSource()
+        self.node = MyCustomNode(num_processes=0)
+        self.success_target = MockTarget()
+        self.failure_target = MockTarget()
+
+        # Connect the nodes
+        self.source.output.connect(self.node.input)
+        self.node.success_output.connect(self.simulation_target.input)
+        self.node.failure_output.connect(self.failure_target.input)
+
+        # Run the nodes
+        for node in (self.source, self.node, self.simulation_target, self.failure_target):
+            node.execute()
                     </code></pre>
                 </section><!--//section-->
 
@@ -609,7 +635,7 @@ input_1.connect(input_2)
                             <h2 class="section-heading" id="item-general-questions">General Questions</h2>
                             <h5><i class="fas fa-question-circle"></i> I have a question or found a bug not mentioned in the docs. What should I do?</h5>
                             <p>
-                                If you have an unanswered question, or you are facing some other issue with the <code>Egon</code> package, please raise an issue on <a class="theme-link" href="https://github.com/djperrefort/Egon/issues">GitHub</a>.
+                                If you have an unanswered question, or you are facing some other issue with the <code>egon</code> package, please raise an issue on <a class="theme-link" href="https://github.com/djperrefort/Egon/issues">GitHub</a>.
                             </p>
                             <h5><i class="fas fa-question-circle"></i> What is the preferred method of attribution?</h5>
                             <p>Project attributions and acknowledgments are greatly appreciated.</p>
