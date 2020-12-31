@@ -71,6 +71,7 @@
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-mock-source">MockSource</a></li>
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-mock-target">MockTarget</a></li>
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-mock-node">MockNode</a></li>
+                    <li class="nav-item"><a class="nav-link scrollto" href="#item-testing-example">Testing Example</a></li>
                     <li class="nav-item section-title"><a class="nav-link scrollto active" href="#section-FAQ"><span class="theme-icon-holder mr-2"><i class="fas fa-question-circle"></i></span>FAQ</a></li>
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-general-questions">General Questions</a></li>
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-parallel-processing">Parallel Processing</a></li>
@@ -152,9 +153,19 @@ python setup.py install --user
                         </p>
                     </section>
 
-                    <div class="alert alert-primary" role="alert">
-                        The following sections demonstrate the construction of pipeline nodes as a dedicated class.
-                        This is the most flexible way to build a node, but if you are looking for a shorter syntax check out the <a class="scrollto active" href="#section-function-decorators">Function Decorators</a> section.
+                    <div class="callout-block callout-block-info mr-1">
+                        <div class="content">
+                            <h4 class="callout-title">
+	                                <span class="callout-icon-holder">
+		                                <i class="fas fa-info-circle"></i>
+		                            </span><!--//icon-holder-->
+                                Quick Tip
+                            </h4>
+                            <p>
+                                The following sections demonstrate the construction of pipeline nodes as a dedicated class.
+                                This is the most flexible way to build a node, but if you are looking for a shorter syntax check out the <a class="scrollto active" href="#section-function-decorators">Function Decorators</a> section.
+                            </p>
+                        </div><!--//content-->
                     </div>
 
                     <section class="docs-intro" id="item-source-nodes">
@@ -333,12 +344,23 @@ etl_pipeline.validate()
 etl_pipeline.run()
                         </code></pre>
 
-                        <div class="alert alert-primary" role="alert">
-                            In the above example each output connector is connected to a single input connector.
-                            In general, an output connector can only connect to a single output.
-                            However, multiple output connectors can connect to a single input.
-                            This allows you to consolidate data from multiple nodes into a single input.
+                        <div class="callout-block callout-block-info mr-1">
+                            <div class="content">
+                                <h4 class="callout-title">
+	                                <span class="callout-icon-holder">
+		                                <i class="fas fa-info-circle"></i>
+		                            </span><!--//icon-holder-->
+                                    Quick Tip
+                                </h4>
+                                <p>
+                                    In the above example each output connector is connected to a single input connector.
+                                    In general, an output connector can only connect to a single output.
+                                    However, multiple output connectors can connect to a single input.
+                                    This allows you to consolidate data from multiple nodes into a single input.
+                                </p>
+                            </div><!--//content-->
                         </div>
+
                     </section><!--//section-->
                 </article><!--//docs-article-->
 
@@ -358,11 +380,23 @@ from egon.decorators import as_node
 def add_two_numbers(x, y):
     return x + y
 						    </code></pre>
-                            <div class="alert alert-primary" role="alert">
-                                Wrapped functions maintain the same docstring and signature as the original function.
-                                They can also be called in exactly the same manner as their unwrapped counterparts.
-                                This allows you to easily port existing logic into a pipeline structure without impacting the existing API design.
+
+                            <div class="callout-block callout-block-info mr-1">
+                                <div class="content">
+                                    <h4 class="callout-title">
+	                                <span class="callout-icon-holder">
+		                                <i class="fas fa-info-circle"></i>
+		                            </span><!--//icon-holder-->
+                                        Quick Tip
+                                    </h4>
+                                    <p>
+                                        Wrapped functions maintain the same docstring and signature as the original function.
+                                        They can also be called in exactly the same manner as their unwrapped counterparts.
+                                        This allows you to easily port existing logic into a pipeline structure without impacting the existing API design.
+                                    </p>
+                                </div><!--//content-->
                             </div>
+
                             <p>
                                 Separate decorators exist for casting functions as different kinds of pipeline nodes.
                                 They behave exactly the same as class based nodes, except they do not support setup or teardown tasks.
@@ -506,14 +540,30 @@ input_1.connect(input_2)
                     <h1 class="docs-heading">Unit Testing</h1>
                     <p>
 
-                        The object oriented design of pipeline nodes mean you can break key logic out into separate methods and target those methods
-                        The <code>mock</code> module provides mockup pipeline nodes useful for the construction of unit-tests, or as a placeholder in early development.
+                        The object oriented design of pipeline nodes mean you test nodes individually before deploying them to a combined pipeline.
+                        The <code>mock</code> module provides mockup pipeline nodes useful for the construction of unit-tests or as a placeholders in early development.
                         Mock nodes differ from the normal pipeline nodes described above in the following ways:
                     </p>
                     <ul>
                         <li>By default, mock nodes do not fork any processes and run entirely in the same process they were instantiated in.</li>
                         <li>Mock objects include predefined <code>action</code> methods so you don't need to write your own.</li>
                     </ul>
+
+                    <div class="callout-block callout-block-danger mr-1">
+                        <div class="content">
+                            <h4 class="callout-title">
+	                                <span class="callout-icon-holder">
+		                                <i class="fas fa-exclamation-triangle"></i>
+		                            </span><!--//icon-holder-->
+                                Important
+                            </h4>
+                            <p>
+                                When building your test suite, be sure to run your nodes in the main thread by setting <code>num_process=0</code> for each instantiated node.
+                                This will ensure you don't end up with any annoying forked processes should you need to call the <code>execute</code> method during testing.
+                            </p>
+                        </div><!--//content-->
+                    </div>
+
                 </header><!--//docs-header-->
 
                 <section class="docs-intro" id="item-mock-source">
@@ -547,8 +597,8 @@ input_1.connect(input_2)
                 </section><!--//section-->
 
 
-                <section class="docs-intro" id="item-forked-processes">
-                    <h2 class="section-heading">Forked Processes</h2>
+                <section class="docs-intro" id="item-testing-example">
+                    <h2 class="section-heading">Testing Example</h2>
                     <p>
 
                     </p>
