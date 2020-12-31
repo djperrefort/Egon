@@ -70,7 +70,6 @@
                     <li class="nav-item section-title"><a class="nav-link scrollto active" href="#section-mock"><span class="theme-icon-holder mr-2"><i class="fas fa-tasks"></i></span>Unit Testing</a></li>
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-mock-source">MockSource</a></li>
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-mock-target">MockTarget</a></li>
-                    <li class="nav-item"><a class="nav-link scrollto" href="#item-mock-node">MockNode</a></li>
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-testing-example">Testing Example</a></li>
                     <li class="nav-item section-title"><a class="nav-link scrollto active" href="#section-FAQ"><span class="theme-icon-holder mr-2"><i class="fas fa-question-circle"></i></span>FAQ</a></li>
                     <li class="nav-item"><a class="nav-link scrollto" href="#item-general-questions">General Questions</a></li>
@@ -569,7 +568,8 @@ input_1.connect(input_2)
                 <section class="docs-intro" id="item-mock-source">
                     <h2 class="section-heading">MockSource</h2>
                     <p>
-                        Mock source objects allow you to easily load data into a pipeline
+                        <code>MockSource</code> objects allow you to easily load data into a series of interconnected nodes.
+                        Any data stored in the <code>load_data</code> attribute will be sent to the <code>output</code> connector when the node executes.
                     </p>
                     <pre class="shadow-lg rounded"><code class="bash">
 
@@ -579,28 +579,18 @@ input_1.connect(input_2)
                 <section class="docs-intro" id="item-mock-target">
                     <h2 class="section-heading">MockTarget</h2>
                     <p>
-
+                        <code>MockTarget</code> objects act as accumulators.
+                        When executed they collect any data passed to their <code>input</code> connector attribute into a list.
                     </p>
                     <pre class="shadow-lg rounded"><code class="bash">
 
 						</code></pre>
                 </section><!--//section-->
-
-                <section class="docs-intro" id="item-mock-node">
-                    <h2 class="section-heading">MockNode</h2>
-                    <p>
-
-                    </p>
-                    <pre class="shadow-lg rounded"><code class="bash">
-
-						</code></pre>
-                </section><!--//section-->
-
 
                 <section class="docs-intro" id="item-testing-example">
                     <h2 class="section-heading">Testing Example</h2>
                     <p>
-
+                        Using the <code>unittest</code> testing framework, we outline an example set of tests beolw:
                     </p>
                     <pre class="shadow-lg rounded"><code class="bash">
 
