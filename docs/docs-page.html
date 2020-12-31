@@ -593,7 +593,8 @@ first_value = mock_target.accumulated_data[0]
                 <section class="docs-intro" id="item-testing-example">
                     <h2 class="section-heading">Testing Example</h2>
                     <p>
-                        Using the <code>unittest</code> testing framework, we outline an example test below.
+                        Using the <code>unittest</code> testing framework, we outline an example setup method below.
+                        The example is designed to test a user defined node <code>MyCustomNode</code> that has a single pair of input and output connectors.
                     </p>
                     <pre class="shadow-lg rounded"><code class="bash">
 from unittest import TestCase
@@ -607,19 +608,22 @@ class MyTestClass(TestCase):
         """Define and setup the nodes used in the test suite"""
 
         # Create the nodes to be used in testing
-        self.source = MockSource()
+        self.source = MockSource([...])  # data to feed the MyCustomNode instance goes inside the list
         self.node = MyCustomNode(num_processes=0)
-        self.success_target = MockTarget()
-        self.failure_target = MockTarget()
+        self.target = MockTarget()
 
         # Connect the nodes
         self.source.output.connect(self.node.input)
-        self.node.success_output.connect(self.simulation_target.input)
-        self.node.failure_output.connect(self.failure_target.input)
+        self.node.output.connect(self.target.input)
 
         # Run the nodes
-        for node in (self.source, self.node, self.simulation_target, self.failure_target):
+        for node in (self.source, self.node, self.target):
             node.execute()
+
+    def test_against_node_outputs(self):
+        """Run a test based on the value outputted by ``MyCustomNode``"""
+
+        node_output_value = self.target.accumulated_data[0]
                     </code></pre>
                 </section><!--//section-->
 
