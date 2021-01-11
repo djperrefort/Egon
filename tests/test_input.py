@@ -1,8 +1,9 @@
 """Tests the connectivity and functionality of ``Input`` connector objects."""
+import time
 from asyncio import sleep
 from unittest import TestCase
 
-from egon.connectors import KillSignal, Input, Output
+from egon.connectors import Input, KillSignal, Output
 from egon.mock import MockSource, MockTarget
 
 
@@ -152,3 +153,37 @@ class MaxQueueSize(TestCase):
 
         with self.assertRaises(RuntimeError):
             self.connector.maxsize += 1
+
+
+class QueueProperties(TestCase):
+    """Test  test the exposure of queue properties by the overlying ``Connector`` class"""
+
+    def setUp(self) -> None:
+        """Create a ``DataStore`` instance"""
+
+        self.connector = Input(maxsize=1)
+
+    def test_size_matches_queue_size(self) -> None:
+        """Test the ``size`` method returns the size of the queue`"""
+
+        self.assertEqual(self.connector.size(), 0)
+        self.connector._queue.put(1)
+        self.assertEqual(self.connector.size(), 1)
+
+    def test_full_state(self) -> None:
+        """Test the ``full`` method returns the state of the queue"""
+
+        self.assertFalse(self.connector.full())
+        self.connector._queue.put(1)
+        self.assertTrue(self.connector.full())
+
+    def test_empty_state(self) -> None:
+        """Test the ``empty`` method returns the state of the queue"""
+
+        self.assertTrue(self.connector.empty())
+        self.connector._queue.put(1)
+
+        # The value of Queue.empty() updates asynchronously
+        time.sleep(1)
+
+        self.assertFalse(self.connector.empty())

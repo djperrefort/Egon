@@ -26,11 +26,7 @@ def _get_nodes_from_connectors(connector_list: Collection[connectors.AbstractCon
 
     nodes = []
     for c in connector_list:
-        if isinstance(c, connectors.Output) and c.is_connected:
-            nodes.append(c.get_partner().parent_node)
-
-        if isinstance(c, connectors.Input) and c.is_connected:
-            nodes.extend(p.parent_node for p in c.get_partners())
+        nodes.extend(p.parent_node for p in c.get_partners())
 
     return nodes
 

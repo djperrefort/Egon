@@ -26,15 +26,10 @@ class InstanceConnections(TestCase):
     def test_overwrite_error_on_connection_overwrite(self) -> None:
         """An error is raised when trying to overwrite an existing connection"""
 
-        self.output_connector.connect(Input())
+        input = Input()
+        self.output_connector.connect(input)
         with self.assertRaises(exceptions.OverwriteConnectionError):
-            self.output_connector.connect(Input())
-
-    def test_connected_instances_share_queue(self) -> None:
-        """Test two connected instances share the same memory queue"""
-
-        self.output_connector.connect(self.input_connector)
-        self.assertIs(self.output_connector._queue, self.input_connector._queue)
+            self.output_connector.connect(input)
 
     def test_is_connected_boolean(self) -> None:
         """The ``has_connections`` method returns the current connection state"""
@@ -54,29 +49,21 @@ class InstanceDisconnect(TestCase):
         self.output = Output()
         self.output.connect(self.input)
 
-    def test_queue_deleted(self) -> None:
-        """Test connectors revert to having individual queues"""
-
-        self.output.disconnect()
-        self.assertIsNone(self.output._queue)
-
     def test_both_connectors_are_disconnected(self) -> None:
         """Test calling disconnect from one connector results in both connectors being disconnected"""
 
-        self.output.disconnect()
-        self.assertNotIn(self.output, self.input._connected_partners)
+        self.output.disconnect(self.input)
+        self.assertNotIn(self.output, self.input.get_partners())
 
-    @staticmethod
-    def test_no_error_on_successive_disconnect() -> None:
-        """Test no errors are raised when disconnecting an instance with no connection"""
-
-        Output().disconnect()
+    def test_error_if_not_connected(self):
+        with self.assertRaises(MissingConnectionError):
+            Output().disconnect(Input())
 
     def test_is_connected_boolean(self) -> None:
         """The ``has_connections`` method returns the current connection state"""
 
         self.assertTrue(self.output.is_connected)
-        self.output.disconnect()
+        self.output.disconnect(self.input)
         self.assertFalse(self.output.is_connected)
 
 
@@ -96,7 +83,7 @@ class ConnectorPut(TestCase):
 
         test_val = 'test_val'
         self.source.output.put(test_val)
-        self.assertEqual(self.source.output._queue.get(), test_val)
+        self.assertEqual(self.target.input._queue.get(), test_val)
 
     def test_error_if_unconnected(self) -> None:
         with self.assertRaises(MissingConnectionError):
@@ -123,7 +110,7 @@ class PartnerMapping(TestCase):
     def test_is_aware_of_partner(self) -> None:
         """Test connectors map to the correct partner connector"""
 
-        self.assertIs(self.output_connector.get_partner(), self.input_connector)
+        self.assertIn(self.input_connector, self.output_connector.get_partners())
 
     def test_is_aware_of_parent(self) -> None:
         """Test connectors map to their partner"""
