@@ -38,6 +38,47 @@ class InstanceConnections(TestCase):
         self.output_connector.connect(self.input_connector)
         self.assertTrue(self.output_connector.is_connected)
 
+    def test_multiple_input_support(self):
+        """Test output connectors support sending data to multiple input connectors"""
+
+        # Create one node to output data and two to accept it
+        test_data = [1, 2, 3]
+        source = MockSource(test_data)
+        target_a = MockTarget()
+        target_b = MockTarget()
+
+        # Connect two outputs to the same input
+        source.output.connect(target_a.input)
+        source.output.connect(target_b.input)
+        source.execute()
+
+        # Both inputs should have received the same data from the output
+        target_a.execute()
+        self.assertListEqual(test_data, target_a.accumulated_data)
+
+        target_b.execute()
+        self.assertListEqual(test_data, target_b.accumulated_data)
+
+
+class PartnerMapping(TestCase):
+    """Test connectors with an established connection correctly map to neighboring connectors/nodes"""
+
+    def setUp(self) -> None:
+        """Create two connected pipeline elements"""
+
+        self.input1 = Input()
+        self.input2 = Input()
+        self.output = Output()
+
+        self.output.connect(self.input1)
+        self.output.connect(self.input2)
+
+    def test_is_aware_of_partners(self) -> None:
+        """Test connectors map to the correct partner connector"""
+
+        input_connectors = [self.input1, self.input2]
+        self.assertCountEqual(input_connectors, self.output.get_partners())
+
 
 class InstanceDisconnect(TestCase):
     """Test the disconnection of two connectors"""

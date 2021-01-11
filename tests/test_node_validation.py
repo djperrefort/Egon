@@ -18,7 +18,7 @@ class BaseTests:
 
         class TestSource(self.node_type):
             def action(self) -> None:
-                pass
+                """Dummy placeholder method required by abstract parent"""
 
         self.test_class = TestSource()
 

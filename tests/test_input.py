@@ -1,4 +1,5 @@
 """Tests the connectivity and functionality of ``Input`` connector objects."""
+
 import time
 from asyncio import sleep
 from unittest import TestCase
@@ -11,27 +12,37 @@ class InstanceConnections(TestCase):
     """Test the connection of generic connector objects to other"""
 
     def setUp(self) -> None:
-        """Define a generic ``Connector`` instance"""
+        """Define a connector instances for testing"""
 
         self.input_connector = Input()
         self.output_connector = Output()
 
-    def test_is_connected_boolean(self) -> None:
-        """The ``has_connections`` method returns the current connection state"""
+    def test_input_is_connected_boolean(self) -> None:
+        """The ``is_connected`` attribute returns the current connection state"""
 
         self.assertFalse(self.input_connector.is_connected)
         self.output_connector.connect(self.input_connector)
         self.assertTrue(self.input_connector.is_connected)
 
-    def test_queue_size_change(self) -> None:
-        """Test connected outputs point at the correct input queue after changing the queue size"""
+    def test_multiple_output_support(self):
+        """Test inputs support the accumulation of data from multiple outputs"""
 
-        input = Input(maxsize=10)
-        output = Output()
-        output.connect(input)
+        # Create two nodes to output data into a single receiving node
+        test_data = [1, 2, 3, 4, 5, 6]
+        source_1 = MockSource(test_data[:3])
+        source_2 = MockSource(test_data[3:])
+        target = MockTarget()
 
-        input.maxsize = 5
-        self.assertIs(input._queue, output._queue)
+        # Connect the two outputs to feed the same input
+        source_1.output.connect(target.input)
+        source_2.output.connect(target.input)
+
+        # Execute the nodes so data is passed through the connectors
+        source_1.execute()
+        source_2.execute()
+        target.execute()
+
+        self.assertCountEqual(test_data, target.accumulated_data)
 
 
 class PartnerMapping(TestCase):
@@ -40,23 +51,18 @@ class PartnerMapping(TestCase):
     def setUp(self) -> None:
         """Create two connected pipeline elements"""
 
-        self.source1 = MockSource()
-        self.source2 = MockSource()
-        self.target = MockTarget()
+        self.input = Input()
+        self.output1 = Output()
+        self.output2 = Output()
 
-        self.source1.output.connect(self.target.input)
-        self.source2.output.connect(self.target.input)
+        self.output1.connect(self.input)
+        self.output2.connect(self.input)
 
     def test_is_aware_of_partners(self) -> None:
         """Test connectors map to the correct partner connector"""
 
-        output_connectors = [self.source1.output, self.source2.output]
-        self.assertCountEqual(output_connectors, self.target.input.get_partners())
-
-    def test_is_aware_of_parent(self) -> None:
-        """Test connectors map to their partner"""
-
-        self.assertIs(self.target.input.parent_node, self.target)
+        output_connectors = [self.output1, self.output2]
+        self.assertCountEqual(output_connectors, self.input.get_partners())
 
 
 class InputGet(TestCase):
@@ -149,7 +155,7 @@ class MaxQueueSize(TestCase):
         """Test a ``RuntimeError`` is raised when changing the size of a nonempty connector"""
 
         self.connector._queue.put(1)
-        sleep(1)  # Let the queue update
+        sleep(2)  # Let the queue update
 
         with self.assertRaises(RuntimeError):
             self.connector.maxsize += 1

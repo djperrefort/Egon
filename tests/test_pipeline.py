@@ -5,7 +5,7 @@ from unittest import TestCase
 
 from egon.connectors import Output
 from egon.exceptions import OrphanedNodeError, MissingConnectionError
-from egon.mock import MockSource, MockNode, MockPipeline
+from egon.mock import MockSource, MockPipeline
 from egon.nodes import Node
 from egon.pipeline import Pipeline
 
@@ -71,9 +71,6 @@ class PipelineValidation(TestCase):
         class Pipe(Pipeline):
             def __init__(self) -> None:
                 self.root = MockSource()
-                self.node = MockNode()
-                self.node.second_output = Output()
-                self.root.output.connect(self.node.input)
 
         with self.assertRaises(MissingConnectionError):
             Pipe().validate()

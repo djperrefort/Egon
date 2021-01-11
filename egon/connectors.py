@@ -100,8 +100,6 @@ class Input(AbstractConnector):
             raise RuntimeError('Cannot change maximum connector size when the connector is not empty.')
 
         self._queue = mp.Queue(maxsize=maxsize)
-        for partner in self._connected_partners:
-            partner._queue = self._queue
 
     def get(self, timeout: Optional[int] = None, refresh_interval: int = 2):
         """Blocking call to retrieve input data
