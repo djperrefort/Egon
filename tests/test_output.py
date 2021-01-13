@@ -1,5 +1,6 @@
 """Tests the connectivity and functionality of ``Input`` connector objects."""
 
+from time import sleep
 from unittest import TestCase
 
 from egon import exceptions
@@ -26,15 +27,10 @@ class InstanceConnections(TestCase):
     def test_overwrite_error_on_connection_overwrite(self) -> None:
         """An error is raised when trying to overwrite an existing connection"""
 
-        self.output_connector.connect(Input())
+        input = Input()
+        self.output_connector.connect(input)
         with self.assertRaises(exceptions.OverwriteConnectionError):
-            self.output_connector.connect(Input())
-
-    def test_connected_instances_share_queue(self) -> None:
-        """Test two connected instances share the same memory queue"""
-
-        self.output_connector.connect(self.input_connector)
-        self.assertIs(self.output_connector._queue, self.input_connector._queue)
+            self.output_connector.connect(input)
 
     def test_is_connected_boolean(self) -> None:
         """The ``has_connections`` method returns the current connection state"""
@@ -42,6 +38,48 @@ class InstanceConnections(TestCase):
         self.assertFalse(self.output_connector.is_connected)
         self.output_connector.connect(self.input_connector)
         self.assertTrue(self.output_connector.is_connected)
+
+    def test_multiple_input_support(self):
+        """Test output connectors support sending data to multiple input connectors"""
+
+        # Create one node to output data and two to accept it
+        test_data = [1, 2, 3]
+        source = MockSource(test_data)
+        target_a = MockTarget()
+        target_b = MockTarget()
+
+        # Connect two outputs to the same input
+        source.output.connect(target_a.input)
+        source.output.connect(target_b.input)
+        source.execute()
+        sleep(1)  # Give the queue a chance to update
+
+        # Both inputs should have received the same data from the output
+        target_a.execute()
+        self.assertListEqual(test_data, target_a.accumulated_data)
+
+        target_b.execute()
+        self.assertListEqual(test_data, target_b.accumulated_data)
+
+
+class PartnerMapping(TestCase):
+    """Test connectors with an established connection correctly map to neighboring connectors/nodes"""
+
+    def setUp(self) -> None:
+        """Create two connected pipeline elements"""
+
+        self.input1 = Input()
+        self.input2 = Input()
+        self.output = Output()
+
+        self.output.connect(self.input1)
+        self.output.connect(self.input2)
+
+    def test_is_aware_of_partners(self) -> None:
+        """Test connectors map to the correct partner connector"""
+
+        input_connectors = [self.input1, self.input2]
+        self.assertCountEqual(input_connectors, self.output.get_partners())
 
 
 class InstanceDisconnect(TestCase):
@@ -54,29 +92,21 @@ class InstanceDisconnect(TestCase):
         self.output = Output()
         self.output.connect(self.input)
 
-    def test_queue_deleted(self) -> None:
-        """Test connectors revert to having individual queues"""
-
-        self.output.disconnect()
-        self.assertIsNone(self.output._queue)
-
     def test_both_connectors_are_disconnected(self) -> None:
         """Test calling disconnect from one connector results in both connectors being disconnected"""
 
-        self.output.disconnect()
-        self.assertNotIn(self.output, self.input._connected_partners)
+        self.output.disconnect(self.input)
+        self.assertNotIn(self.output, self.input.get_partners())
 
-    @staticmethod
-    def test_no_error_on_successive_disconnect() -> None:
-        """Test no errors are raised when disconnecting an instance with no connection"""
-
-        Output().disconnect()
+    def test_error_if_not_connected(self):
+        with self.assertRaises(MissingConnectionError):
+            Output().disconnect(Input())
 
     def test_is_connected_boolean(self) -> None:
         """The ``has_connections`` method returns the current connection state"""
 
         self.assertTrue(self.output.is_connected)
-        self.output.disconnect()
+        self.output.disconnect(self.input)
         self.assertFalse(self.output.is_connected)
 
 
@@ -96,7 +126,7 @@ class ConnectorPut(TestCase):
 
         test_val = 'test_val'
         self.source.output.put(test_val)
-        self.assertEqual(self.source.output._queue.get(), test_val)
+        self.assertEqual(self.target.input._queue.get(), test_val)
 
     def test_error_if_unconnected(self) -> None:
         with self.assertRaises(MissingConnectionError):
@@ -123,7 +153,7 @@ class PartnerMapping(TestCase):
     def test_is_aware_of_partner(self) -> None:
         """Test connectors map to the correct partner connector"""
 
-        self.assertIs(self.output_connector.get_partner(), self.input_connector)
+        self.assertIn(self.input_connector, self.output_connector.get_partners())
 
     def test_is_aware_of_parent(self) -> None:
         """Test connectors map to their partner"""

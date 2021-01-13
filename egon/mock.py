@@ -46,7 +46,7 @@ class MockNode(nodes.Node):
         self.input = Input()
         super(MockNode, self).__init__(num_processes)
 
-    def action(self) -> None:
+    def action(self) -> None:  # pragma: no cover
         """Placeholder function to satisfy requirements of abstract parent"""
 
         for x in self.input.iter_get():

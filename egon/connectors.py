@@ -7,97 +7,62 @@ type of connector. ``Output`` connectors are used to send data and
 
 from __future__ import annotations
 
-import abc
 import multiprocessing as mp
 from queue import Empty
-from typing import Any, Optional, TYPE_CHECKING, Iterable, List, Collection
+from typing import Any, List, Optional, TYPE_CHECKING
 
-from . import exceptions
-from .exceptions import MissingConnectionError
+from ._utils import KillSignal, ObjectCollection
+from .exceptions import MissingConnectionError, OverwriteConnectionError
 
 if TYPE_CHECKING:  # pragma: no cover
     from .nodes import AbstractNode
 
 
-class KillSignal:
-    """Used to indicate that a process should exit"""
-
-
-class ObjectCollection:
-    """Collection of objects with O(1) add and remove"""
-
-    def __init__(self, data: Optional[Collection] = None) -> None:
-        """A mutable collection of arbitrary objects
-
-        Args:
-            data: Populate the collection instance with the given data
-        """
-
-        # Map object hash values to their index in a list
-        self._object_list = list(set(data)) if data else []
-        self._index_map = {o: i for i, o in enumerate(self._object_list)}
-
-    def add(self, x: Any) -> None:
-        """Add a hashable object to the collection
-
-        Args:
-            x: The object to add
-        """
-
-        # Exit if ``x`` is already in the collection
-        if x in self._index_map:
-            return
-
-        # Add ``x`` to the end of the collection
-        self._index_map[x] = len(self._object_list)
-        self._object_list.append(x)
-
-    def remove(self, x: Any) -> None:
-        """Remove an object from the collection
-
-        Args:
-            x: The object to remove
-        """
-
-        index = self._index_map[x]
-
-        # Swap element with last element so that removal from the list can be done in O(1) time
-        size = len(self._object_list)
-        last = self._object_list[size - 1]
-        self._object_list[index], self._object_list[size - 1] = self._object_list[size - 1], self._object_list[index]
-
-        # Update hash table for new index of last element
-        self._index_map[last] = index
-
-        del self._index_map[x]
-        del self._object_list[-1]
-
-    def __iter__(self) -> Iterable:
-        return iter(self._object_list)
-
-    def __contains__(self, item: Any) -> bool:
-        return item in self._object_list
-
-    def __len__(self) -> int:
-        return len(self._object_list)
-
-    def __repr__(self) -> str:  # pragma: no cover
-        return f'<Container({self._object_list})>'
-
-
 class AbstractConnector:
     """Exposes select functionality from an underlying ``Queue`` object"""
 
-    def __init__(self, name: str = None, maxsize: int = 0) -> None:
+    def __init__(self, name: str = None) -> None:
         """Queue-like object for passing data between nodes and / or parallel processes
 
         Args:
-            name: Human readable name for the connector object
-            maxsize: Maximum number of items to store in the underlying queue
+            name: Optional human readable name for the connector object
         """
 
         self.name = name
         self._node: Optional[AbstractNode] = None  # The node that this connector is assigned to
+        self._connected_partners = ObjectCollection()  # Tracks other connectors that are connected to this instance
+
+    @property
+    def parent_node(self) -> AbstractNode:
+        """The parent node this connector is assigned to"""
+
+        return self._node
+
+    @property
+    def is_connected(self) -> bool:
+        """Return whether the connector has any established connections"""
+
+        return bool(self._connected_partners)
+
+    def get_partners(self) -> List[Output]:
+        """Return a list of connectors that are connected to this instance"""
+
+        return list(self._connected_partners)
+
+
+class Input(AbstractConnector):
+    """Handles the input of data into a pipeline node"""
+
+    def __init__(self, name: str = None, maxsize: int = 0) -> None:
+        """Handles the input of data into a pipeline node
+
+        Args:
+            name: Optional human readable name for the connector object
+            maxsize: The maximum number of communicated items to store in memory
+        """
+
+        super().__init__(name)
+        self._maxsize = maxsize
         self._queue = mp.Queue(maxsize=maxsize)
 
     def empty(self) -> bool:
@@ -114,32 +79,6 @@ class AbstractConnector:
         """Return the size of the connection queue"""
 
         return self._queue.qsize()
-
-    @property
-    def parent_node(self) -> AbstractNode:
-        """The parent node this connector is assigned to"""
-
-        return self._node
-
-    @property
-    @abc.abstractmethod
-    def is_connected(self) -> bool:  # pragma: no cover
-        pass
-
-
-class Input(AbstractConnector):
-    """Handles the input of data into a pipeline node"""
-
-    def __init__(self, name: str = None, maxsize: int = 0) -> None:
-        """Handles the input of data into a pipeline node
-
-        Args:
-            name: Human readable name for the connector object
-            maxsize: The maximum number of communicated items to store in memory
-        """
-
-        super().__init__(name, maxsize)
-        self._connected_partners = ObjectCollection()  # Tracks connector objects that feed into the input
 
     @property
     def maxsize(self) -> int:
@@ -161,19 +100,6 @@ class Input(AbstractConnector):
             raise RuntimeError('Cannot change maximum connector size when the connector is not empty.')
 
         self._queue = mp.Queue(maxsize=maxsize)
-        for partner in self._connected_partners:
-            partner._queue = self._queue
-
-    @property
-    def is_connected(self) -> bool:
-        """Return whether the connector has any established connections"""
-
-        return bool(self._connected_partners)
-
-    def get_partners(self) -> List[Output]:
-        """Return a list of output connectors that are connected to this input"""
-
-        return list(self._connected_partners)
 
     def get(self, timeout: Optional[int] = None, refresh_interval: int = 2):
         """Blocking call to retrieve input data
@@ -228,25 +154,11 @@ class Output(AbstractConnector):
         """Handles the output of data from a pipeline node
 
         Args:
-            name: Human readable name for the connector object
+            name: Optional human readable name for the connector object
         """
 
         super().__init__(name)
         self._partner: Optional[Input] = None  # The connector object of another node
-
-    @property
-    def is_connected(self) -> bool:
-        """Return whether the connector has any established connections"""
-
-        return bool(self._partner)
-
-    def get_partner(self) -> Input:
-        """The connector object connected to this instance
-
-        Returns ``None`` if no connection has been established
-        """
-
-        return self._partner
 
     def connect(self, connector: Input) -> None:
         """Establish the flow of data between this connector and another connector
@@ -258,22 +170,21 @@ class Output(AbstractConnector):
         if type(connector) is type(self):
             raise ValueError('Cannot join together two connection objects of the same type.')
 
-        if self.is_connected:
-            raise exceptions.OverwriteConnectionError(
-                'The current output connector is already connected to an input. Disconnect the output before re-connecting.')
+        if connector in self.get_partners():
+            raise OverwriteConnectionError('The given connectors are already connected together.')
 
         # Once a connection is established between two connectors, they share an internal queue
-        self._partner = connector
+        self._connected_partners.add(connector)
         connector._connected_partners.add(self)
-        self._queue = connector._queue
 
-    def disconnect(self) -> None:
+    def disconnect(self, connector: Input) -> None:
         """Disconnect any established connections"""
 
-        if self.is_connected:
-            self._partner._connected_partners.remove(self)
-            self._partner = None
-            self._queue = None
+        if connector not in self.get_partners():
+            raise MissingConnectionError(f'Output connector is not connected to the given connector: {connector}')
+
+        connector._connected_partners.remove(self)
+        self._connected_partners.remove(connector)
 
     def put(self, x: Any, raise_missing_connection: bool = True) -> None:
         """Add data into the connector
@@ -287,9 +198,10 @@ class Output(AbstractConnector):
         """
 
         if not self.is_connected and raise_missing_connection:
-            raise MissingConnectionError('Output connector is not connected to an input to send data to.')
+            raise MissingConnectionError('Output connector is not connected to any input connectors.')
 
-        self._queue.put(x)
+        for partner in self.get_partners():
+            partner._queue.put(x)
 
     def __repr__(self) -> str:  # pragma: no cover
         return f'<egon.connectors.Output(name={self.name}) object at {hex(id(self))}>'

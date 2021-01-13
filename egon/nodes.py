@@ -8,8 +8,9 @@ from __future__ import annotations
 import abc
 import inspect
 import multiprocessing as mp
+import sys
 from abc import ABC
-from typing import List, Union, Collection
+from typing import Collection, List, Union
 
 from . import connectors, exceptions
 
@@ -26,11 +27,7 @@ def _get_nodes_from_connectors(connector_list: Collection[connectors.AbstractCon
 
     nodes = []
     for c in connector_list:
-        if isinstance(c, connectors.Output) and c.is_connected:
-            nodes.append(c.get_partner().parent_node)
-
-        if isinstance(c, connectors.Input) and c.is_connected:
-            nodes.extend(p.parent_node for p in c.get_partners())
+        nodes.extend(p.parent_node for p in c.get_partners())
 
     return nodes
 
@@ -159,12 +156,16 @@ class AbstractNode(abc.ABC):
         """Return whether the node is still expecting data from upstream"""
 
         for input_connector in self._get_attrs(connectors.Input):
-            if not input_connector.empty():
-                return True
-
+            # IMPORTANT: The order of the following code blocks is crucial
+            # We check for any running upstream nodes first
             for partner in input_connector.get_partners():
                 if not partner.parent_node.node_finished:
                     return True
+
+            # Check for any unprocessed data once we know there are no
+            # nodes still populating any input queues
+            if not input_connector.empty():
+                return True
 
         return False
 
