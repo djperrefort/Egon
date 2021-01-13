@@ -350,9 +350,9 @@ etl_pipeline.run()
                                     Quick Tip
                                 </h4>
                                 <p>
-                                    In the above example each output connector is connected to a single input connector.
-                                    In general, an output connector can only connect to a single output.
-                                    However, multiple output connectors can connect to a single input.
+                                    In general, an output connector can connect to multiple inputs.
+                                    Each input will receive an identical copy of the data send by the output.
+                                    Multiple output connectors can also connect to a single input.
                                     This allows you to consolidate data from multiple nodes into a single input.
                                 </p>
                             </div><!--//content-->
