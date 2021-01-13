@@ -1,5 +1,6 @@
 """Tests the connectivity and functionality of ``Input`` connector objects."""
 
+from time import sleep
 from unittest import TestCase
 
 from egon import exceptions
@@ -51,6 +52,7 @@ class InstanceConnections(TestCase):
         source.output.connect(target_a.input)
         source.output.connect(target_b.input)
         source.execute()
+        sleep(1)  # Give the queue a chance to update
 
         # Both inputs should have received the same data from the output
         target_a.execute()
