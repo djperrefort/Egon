@@ -178,7 +178,7 @@ class AbstractNode(abc.ABC):
         return f'{self.__class__.__name__}(num_processes={self.num_processes})'
 
     def __del__(self):
-        if not self.process_finished:
+        if any(p.is_alive() for p in self._processes):
             raise RuntimeError(f'Cannot delete a node while it is running (del called on node {self})')
 
 
