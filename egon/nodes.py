@@ -46,11 +46,10 @@ class AbstractNode(abc.ABC):
         self._states = mp.Manager().dict({id(p): False for p in self._processes})
 
         self._current_process_state = False
-        for connection in self.connectors:
+        for connection in self.get_connectors():
             connection._node = self
 
-    @property
-    def connectors(self):
+    def get_connectors(self) -> List[connectors.AbstractConnector]:
         return self._get_attrs(connectors.AbstractConnector)
 
     @property
@@ -107,7 +106,7 @@ class AbstractNode(abc.ABC):
             MissingConnectionError: For an invalid instance construction
         """
 
-        for conn in self.connectors:
+        for conn in self.get_connectors():
             if not conn.is_connected:
                 raise exceptions.MissingConnectionError(
                     f'Connector {conn} does not have an established connection (Node: {conn.parent_node})')
@@ -233,7 +232,7 @@ class Node(Target, Source, ABC):
             OrphanedNodeError: For an instance that is inaccessible by connectors
         """
 
-        if not self.connectors:
+        if not self.get_connectors():
             raise exceptions.OrphanedNodeError('Node has no associated connectors and is inaccessible by the pipeline.')
 
         self._validate_connections()
