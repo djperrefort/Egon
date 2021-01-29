@@ -178,6 +178,10 @@ class AbstractNode(abc.ABC):
     def __repr__(self) -> str:  # pragma: no cover
         return f'{self.__class__.__name__}(num_processes={self.num_processes})'
 
+    def __del__(self):
+        if not self.process_finished:
+            raise RuntimeError(f'Cannot delete a node while it is running (del called on node {self})')
+
 
 class Source(AbstractNode, ABC):
     """A pipeline process that only has output streams"""
