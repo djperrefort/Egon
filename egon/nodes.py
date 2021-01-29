@@ -8,7 +8,6 @@ from __future__ import annotations
 import abc
 import inspect
 import multiprocessing as mp
-import sys
 from abc import ABC
 from typing import Collection, List, Union
 
@@ -47,8 +46,11 @@ class AbstractNode(abc.ABC):
         self._states = mp.Manager().dict({id(p): False for p in self._processes})
 
         self._current_process_state = False
-        for connection in self._get_attrs(connectors.AbstractConnector):
+        for connection in self.get_connectors():
             connection._node = self
+
+    def get_connectors(self) -> List[connectors.AbstractConnector]:
+        return self._get_attrs(connectors.AbstractConnector)
 
     @property
     def num_processes(self) -> int:
@@ -104,7 +106,7 @@ class AbstractNode(abc.ABC):
             MissingConnectionError: For an invalid instance construction
         """
 
-        for conn in self._get_attrs(connectors.AbstractConnector):
+        for conn in self.get_connectors():
             if not conn.is_connected:
                 raise exceptions.MissingConnectionError(
                     f'Connector {conn} does not have an established connection (Node: {conn.parent_node})')
@@ -169,6 +171,16 @@ class AbstractNode(abc.ABC):
 
         return False
 
+    def __str__(self) -> str:  # pragma: no cover
+        return f'<{self.__repr__()} object at {hex(id(self))}>'
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f'{self.__class__.__name__}(num_processes={self.num_processes})'
+
+    def __del__(self):
+        if any(p.is_alive() for p in self._processes):
+            raise RuntimeError(f'Cannot delete a node while it is running (del called on node {self})')
+
 
 class Source(AbstractNode, ABC):
     """A pipeline process that only has output streams"""
@@ -220,7 +232,7 @@ class Node(Target, Source, ABC):
             OrphanedNodeError: For an instance that is inaccessible by connectors
         """
 
-        if not self._get_attrs(connectors.AbstractConnector):
+        if not self.get_connectors():
             raise exceptions.OrphanedNodeError('Node has no associated connectors and is inaccessible by the pipeline.')
 
         self._validate_connections()

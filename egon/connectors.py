@@ -49,6 +49,12 @@ class AbstractConnector:
 
         return list(self._connected_partners)
 
+    def __str__(self) -> str:  # pragma: no cover
+        return f'<{self.__repr__()} object at {hex(id(self))}>'
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f'{self.__class__.__name__}(name={self.name})'
+
 
 class Input(AbstractConnector):
     """Handles the input of data into a pipeline node"""
@@ -143,9 +149,6 @@ class Input(AbstractConnector):
 
             yield data
 
-    def __repr__(self) -> str:  # pragma: no cover
-        return f'<egon.connectors.Input(name={self.name}) object at {hex(id(self))}>'
-
 
 class Output(AbstractConnector):
     """Handles the output of data from a pipeline node"""
@@ -202,6 +205,3 @@ class Output(AbstractConnector):
 
         for partner in self.get_partners():
             partner._queue.put(x)
-
-    def __repr__(self) -> str:  # pragma: no cover
-        return f'<egon.connectors.Output(name={self.name}) object at {hex(id(self))}>'
