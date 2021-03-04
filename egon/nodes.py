@@ -9,6 +9,7 @@ import abc
 import inspect
 import multiprocessing as mp
 from abc import ABC
+from time import sleep
 from typing import Collection, List, Union
 
 from . import connectors, exceptions
@@ -143,6 +144,12 @@ class AbstractNode(abc.ABC):
     def teardown(self) -> None:
         """Teardown tasks called after running ``action``"""
 
+    def _set_process_finished(self):
+        """Record the parent process as having finished executing analysis tasks"""
+
+        sleep(2)  # Allow any ``put`` calls to finish populating the queue
+        self.process_finished = True
+
     def execute(self) -> None:
         """Execute the pipeline node
 
@@ -152,7 +159,7 @@ class AbstractNode(abc.ABC):
         self.setup()
         self.action()
         self.teardown()
-        self.process_finished = True
+        self._set_process_finished()
 
     def expecting_data(self) -> bool:
         """Return whether the node is still expecting data from upstream"""
