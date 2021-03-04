@@ -160,8 +160,8 @@ class AbstractNode(abc.ABC):
         for input_connector in self._get_attrs(connectors.Input):
             # IMPORTANT: The order of the following code blocks is crucial
             # We check for any running upstream nodes first
-            for partner in input_connector.get_partners():
-                if not partner.parent_node.node_finished:
+            for output_connector in input_connector.get_partners():
+                if not output_connector.parent_node.node_finished:
                     return True
 
             # Check for any unprocessed data once we know there are no

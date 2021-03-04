@@ -44,7 +44,7 @@ class AbstractConnector:
 
         return bool(self._connected_partners)
 
-    def get_partners(self) -> List[Output]:
+    def get_partners(self) -> List:
         """Return a list of connectors that are connected to this instance"""
 
         return list(self._connected_partners)
