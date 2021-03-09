@@ -9,7 +9,7 @@ import abc
 import inspect
 import multiprocessing as mp
 from abc import ABC
-from typing import Collection, List, Union
+from typing import Collection, List, Optional, Union
 
 from . import connectors, exceptions
 
@@ -38,25 +38,25 @@ class AbstractNode(abc.ABC):
         """Represents a single pipeline node"""
 
         if num_processes < 0:
-            raise ValueError(f'Cannot instantiate a negative number of forked processes (got {num_processes}).')
+            raise ValueError(f'Cannot instantiate a negative number of processes (got {num_processes}).')
 
-        # Note that we use the memory address and not the ``pid`` attribute.
-        # ``pid`` is only set after the process is started
-        self._processes = [mp.Process(target=self.execute) for _ in range(num_processes)]
-        self._states = mp.Manager().dict({id(p): False for p in self._processes})
+        self._num_processes = num_processes
+        self._pool: Optional[mp.Pool] = None
 
-        self._current_process_state = False
+        # Make any connector attributes aware of their parent node
         for connection in self.get_connectors():
             connection._node = self
 
-    def get_connectors(self) -> List[connectors.AbstractConnector]:
-        return self._get_attrs(connectors.AbstractConnector)
+        # Track the state of the node
+        self._is_running = False  # Whether any forked processes are running
+        self._current_process_finished = False  # State of the current (forked) process
+        self._node_finished = False  # State of all combined processes
 
     @property
     def num_processes(self) -> int:
         """The number of processes assigned to the current node"""
 
-        return len(self._processes)
+        return self._num_processes
 
     @num_processes.setter
     def num_processes(self, num_processes) -> None:
@@ -65,31 +65,30 @@ class AbstractNode(abc.ABC):
         if num_processes < 0:
             raise ValueError(f'Cannot instantiate a negative number of forked processes (got {num_processes}).')
 
-        if any(p.is_alive() for p in self._processes):
+        if self._is_running:
             raise RuntimeError('Cannot change number of processes while node is running.')
 
         if self.num_processes == num_processes:  # pragma: no cover
             return
 
-        self._processes = [mp.Process(target=self.execute) for _ in range(num_processes)]
-        self._states = mp.Manager().dict({id(p): False for p in self._processes})
+        self._num_processes = num_processes
+
+    def get_connectors(self) -> List[connectors.AbstractConnector]:
+        """Return any connector attributes associated with the node instance"""
+
+        return self._get_attrs(connectors.AbstractConnector)
 
     @property
     def process_finished(self) -> bool:
-        """Return whether the current process has finished processing data"""
+        """Whether the current process has finished processing data"""
 
-        # Use get in case called from a process not forked by the class __init__
-        return self._states.get(mp.current_process().pid, self._current_process_state)
-
-    @process_finished.setter
-    def process_finished(self, state: bool) -> None:
-        self._states[id(mp.current_process())] = self._current_process_state = state
+        return self._current_process_finished
 
     @property
     def node_finished(self) -> bool:
-        """Return whether all node processes have finished processing data"""
+        """Whether all node processes have finished processing data"""
 
-        return all(self._states.values())
+        return self._node_finished
 
     @abc.abstractmethod
     def validate(self) -> None:
@@ -144,7 +143,7 @@ class AbstractNode(abc.ABC):
         """Teardown tasks called after running ``action``"""
 
     def execute(self) -> None:
-        """Execute the pipeline node
+        """Execute all pipeline node tasks in order
 
         Execution includes all ``setup``, ``action``, and ``teardown`` tasks.
         """
@@ -152,7 +151,22 @@ class AbstractNode(abc.ABC):
         self.setup()
         self.action()
         self.teardown()
-        self.process_finished = True
+        self._current_process_finished = True
+
+    def _run_pool(self) -> None:
+        """Launch a pool of processes targeting the ``execute`` method"""
+
+        if self._is_running:
+            raise RuntimeError('This node instance is already running.')
+
+        if self._node_finished:
+            raise RuntimeError('This node instance has already finished executing.')
+
+        self._is_running = True
+        self._pool = mp.Pool(self.num_processes)
+        self._pool.apply(self.execute)
+        self._is_running = False
+        self._node_finished = True
 
     def expecting_data(self) -> bool:
         """Return whether the node is still expecting data from upstream"""
@@ -178,7 +192,7 @@ class AbstractNode(abc.ABC):
         return f'{self.__class__.__name__}(num_processes={self.num_processes})'
 
     def __del__(self):
-        if any(p.is_alive() for p in self._processes):
+        if self._is_running:
             raise RuntimeError(f'Cannot delete a node while it is running (del called on node {self})')
 
 
