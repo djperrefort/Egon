@@ -9,6 +9,7 @@ import abc
 import inspect
 import multiprocessing as mp
 from abc import ABC
+from time import sleep
 from typing import Collection, List, Union
 
 from . import connectors, exceptions
@@ -143,6 +144,12 @@ class AbstractNode(abc.ABC):
     def teardown(self) -> None:
         """Teardown tasks called after running ``action``"""
 
+    def _set_process_finished(self) -> None:
+        """Record the parent process as having finished executing analysis tasks"""
+
+        sleep(2)  # Allow any ``put`` calls to finish populating the queue
+        self.process_finished = True
+
     def execute(self) -> None:
         """Execute the pipeline node
 
@@ -152,7 +159,7 @@ class AbstractNode(abc.ABC):
         self.setup()
         self.action()
         self.teardown()
-        self.process_finished = True
+        self._set_process_finished()
 
     def expecting_data(self) -> bool:
         """Return whether the node is still expecting data from upstream"""
@@ -160,8 +167,8 @@ class AbstractNode(abc.ABC):
         for input_connector in self._get_attrs(connectors.Input):
             # IMPORTANT: The order of the following code blocks is crucial
             # We check for any running upstream nodes first
-            for partner in input_connector.get_partners():
-                if not partner.parent_node.node_finished:
+            for output_connector in input_connector.get_partners():
+                if not output_connector.parent_node.node_finished:
                     return True
 
             # Check for any unprocessed data once we know there are no
@@ -177,7 +184,7 @@ class AbstractNode(abc.ABC):
     def __repr__(self) -> str:  # pragma: no cover
         return f'{self.__class__.__name__}(num_processes={self.num_processes})'
 
-    def __del__(self):
+    def __del__(self) -> None:
         if any(p.is_alive() for p in self._processes):
             raise RuntimeError(f'Cannot delete a node while it is running (del called on node {self})')
 

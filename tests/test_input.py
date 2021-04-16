@@ -1,7 +1,6 @@
 """Tests the connectivity and functionality of ``Input`` connector objects."""
 
 import time
-from asyncio import sleep
 from unittest import TestCase
 
 from egon.connectors import Input, KillSignal, Output
@@ -155,7 +154,7 @@ class MaxQueueSize(TestCase):
         """Test a ``RuntimeError`` is raised when changing the size of a nonempty connector"""
 
         self.connector._queue.put(1)
-        sleep(2)  # Let the queue update
+        time.sleep(2)  # Let the queue update
 
         with self.assertRaises(RuntimeError):
             self.connector.maxsize += 1
