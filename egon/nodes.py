@@ -144,7 +144,7 @@ class AbstractNode(abc.ABC):
     def teardown(self) -> None:
         """Teardown tasks called after running ``action``"""
 
-    def _set_process_finished(self):
+    def _set_process_finished(self) -> None:
         """Record the parent process as having finished executing analysis tasks"""
 
         sleep(2)  # Allow any ``put`` calls to finish populating the queue
@@ -184,7 +184,7 @@ class AbstractNode(abc.ABC):
     def __repr__(self) -> str:  # pragma: no cover
         return f'{self.__class__.__name__}(num_processes={self.num_processes})'
 
-    def __del__(self):
+    def __del__(self) -> None:
         if any(p.is_alive() for p in self._processes):
             raise RuntimeError(f'Cannot delete a node while it is running (del called on node {self})')
 
